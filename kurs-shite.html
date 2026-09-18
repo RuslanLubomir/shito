@@ -1,0 +1,456 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Курс: худи-свитер — с нуля до продажи</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🧵</text></svg>">
+<style>
+  :root {
+    --paper: #FFFFFF; --canvas: #FFFFFF; --raised: #FFFFFF;
+    --ink: #2B2B2B; --muted: #737373; --muted-2: #A3A3A3;
+    --line: #E4E4E4; --line-soft: #F0F0F0;
+    --accent: #5C5C5C; --accent-bg: #ECECEC; --accent-line: #C6C6C6;
+    --pos: #1A7F4E; --pos-bg: #E4F3EA;
+    --shadow-sm: 0 1px 2px rgba(24,32,22,0.04);
+    --shadow: 0 1px 2px rgba(24,32,22,0.04), 0 8px 22px -10px rgba(24,32,22,0.12);
+    --radius: 14px; --radius-sm: 9px;
+    --font-display: ui-serif, "Iowan Old Style", "Palatino Linotype", Georgia, "Times New Roman", serif;
+    --font-body: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", "Helvetica Neue", Roboto, Arial, sans-serif;
+    --font-mono: ui-monospace, "SF Mono", "Cascadia Code", "Roboto Mono", Consolas, monospace;
+    --space-1: 4px; --space-2: 8px; --space-3: 12px; --space-4: 16px; --space-5: 24px;
+    --text-xs: 0.75rem; --text-sm: 0.83rem; --text-base: 0.95rem; --text-lg: 1.1rem; --text-display: 2.1rem;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--canvas); color: var(--ink); font-family: var(--font-body);
+    font-size: var(--text-base); line-height: 1.55; -webkit-font-smoothing: antialiased; }
+  .wrap { max-width: 720px; margin: 0 auto; padding: var(--space-5) var(--space-4) 80px; }
+  h1, h2, h3 { font-family: var(--font-display); font-weight: 600; margin: 0 0 var(--space-2); }
+  h1 { font-size: var(--text-display); }
+  h2 { font-size: var(--text-lg); }
+  .opening { font-style: italic; color: var(--muted); border-left: 3px solid var(--accent-line);
+    padding: var(--space-2) var(--space-4); margin: var(--space-4) 0; }
+  .hero { background: var(--raised); border: 1px solid var(--line); border-radius: var(--radius);
+    padding: var(--space-4); margin: var(--space-4) 0; box-shadow: var(--shadow-sm); }
+  .hero-sub { color: var(--muted); margin: 0 0 var(--space-3); }
+  .progress-outer { background: var(--line-soft); border-radius: 999px; height: 10px; overflow: hidden; }
+  .progress-inner { background: var(--pos); height: 100%; width: 0%; transition: width .3s; }
+  .progress-label { font-size: var(--text-xs); color: var(--muted); margin-top: var(--space-1); }
+  .sheet { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-2); margin-top: var(--space-4);
+    font-size: var(--text-sm); }
+  .sheet div strong { display: block; color: var(--muted); font-size: var(--text-xs); font-weight: 600;
+    text-transform: uppercase; letter-spacing: .04em; margin-bottom: 2px; }
+  .hook { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-4); margin: var(--space-5) 0; }
+  @media (max-width: 560px) { .hook, .sheet { grid-template-columns: 1fr; } }
+  .hook > div { background: var(--raised); border: 1px solid var(--line); border-radius: var(--radius);
+    padding: var(--space-4); }
+  .card { background: var(--raised); border: 1px solid var(--line); border-radius: var(--radius);
+    padding: var(--space-4); margin: var(--space-4) 0; box-shadow: var(--shadow-sm); }
+  .card.premise { border-left: 4px solid var(--accent); }
+  .pedagogy { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-3); }
+  @media (max-width: 560px) { .pedagogy { grid-template-columns: 1fr; } }
+  .pedagogy .card { margin: 0; font-size: var(--text-sm); }
+  .pedagogy .card strong { display: block; margin-bottom: 4px; }
+
+  .level-card { background: var(--raised); border: 1px solid var(--line); border-radius: var(--radius);
+    padding: var(--space-5); margin: var(--space-5) 0; box-shadow: var(--shadow); }
+  .level-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--space-2); }
+  .xp-pill { background: var(--accent-bg); color: var(--accent); border-radius: 999px;
+    padding: 2px 12px; font-size: var(--text-xs); font-weight: 600; }
+  .chapter-num { font-size: var(--text-xs); color: var(--muted-2); text-transform: uppercase; letter-spacing: .05em; }
+  .story { margin: var(--space-3) 0; }
+  .new-term { background: var(--accent-bg); border-radius: var(--radius-sm); padding: var(--space-3);
+    font-size: var(--text-sm); margin: var(--space-3) 0; }
+  .new-term b { color: var(--ink); }
+  pre.code { background: var(--ink); color: #EDEDED; padding: var(--space-4); border-radius: var(--radius-sm);
+    font-family: var(--font-mono); font-size: var(--text-sm); white-space: pre-wrap; overflow-x: auto; }
+  .quest { border-left: 3px solid var(--accent); padding: var(--space-2) var(--space-4); margin: var(--space-4) 0; }
+  .trainer { width: 100%; min-height: 80px; border: 1px solid var(--line); border-radius: var(--radius-sm);
+    padding: var(--space-3); font-family: var(--font-body); font-size: var(--text-sm); color: var(--ink);
+    margin: var(--space-2) 0; }
+  .hint-row { margin: var(--space-3) 0; }
+  details.hint, details.solution { border: 1px solid var(--line); border-radius: var(--radius-sm);
+    padding: var(--space-2) var(--space-3); margin-bottom: var(--space-2); font-size: var(--text-sm); }
+  details.solution summary { color: var(--pos); font-weight: 600; }
+  .payoff { background: var(--pos-bg); border-radius: var(--radius-sm); padding: var(--space-4);
+    margin-top: var(--space-4); font-size: var(--text-sm); }
+  .done-row { display: flex; align-items: center; gap: var(--space-2); margin-top: var(--space-4);
+    padding-top: var(--space-3); border-top: 1px dashed var(--line); }
+  .done-row label { font-size: var(--text-sm); font-weight: 600; }
+
+  .milestone, .roadmap, .ending { background: var(--raised); border: 1px solid var(--line);
+    border-radius: var(--radius); padding: var(--space-5); margin: var(--space-5) 0; }
+  .roadmap ul { padding-left: var(--space-5); margin: var(--space-2) 0; }
+  footer.note { text-align: center; color: var(--muted-2); font-size: var(--text-xs); margin-top: var(--space-5); }
+
+  #tasks-only-toggle { position: sticky; top: var(--space-3); z-index: 5; display: inline-block;
+    background: var(--accent-bg); border: 1px solid var(--accent-line); border-radius: 999px;
+    padding: 6px 16px; font-size: var(--text-sm); font-weight: 600; cursor: pointer; margin-bottom: var(--space-4); }
+  body.tasks-only .opening, body.tasks-only .hook, body.tasks-only .diagnostic,
+  body.tasks-only .pedagogy, body.tasks-only .card.premise, body.tasks-only .story,
+  body.tasks-only .payoff, body.tasks-only .milestone, body.tasks-only .roadmap,
+  body.tasks-only .ending { display: none; }
+
+  .honest-note { font-size: var(--text-xs); color: var(--muted-2); border-top: 1px dashed var(--line);
+    margin-top: var(--space-3); padding-top: var(--space-2); }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <button id="tasks-only-toggle">Только задания, без истории</button>
+
+  <p class="opening">
+    Машинка стоит в углу комнаты уже который год — белая, компактная, размером с крупного карася,
+    марку никто уже не помнит: то ли досталась от кого-то, то ли куплена давно и не самой дорогой.
+    Она умеет шить прямую строчку и зигзаг — и этого, как выяснится, вполне достаточно, чтобы сделать
+    вещь, за которую не стыдно будет взять деньги. Не сразу. Но раньше, чем кажется.
+  </p>
+
+  <div class="hero">
+    <h1>Худи-свитер</h1>
+    <p class="hero-sub">Капюшон и перед — от обычного худи. Рукава — от свитера. Одна вещь, два кроя.</p>
+    <div class="progress-outer"><div class="progress-inner" id="progress-bar"></div></div>
+    <p class="progress-label" id="progress-label">0 из 6 уровней пройдено</p>
+    <div class="sheet">
+      <div><strong>Швея</strong>Маша</div>
+      <div><strong>Машинка</strong>Прямая строчка + зигзаг</div>
+      <div><strong>Цель курса</strong>Уровень «на продажу», не «для себя одной»</div>
+      <div><strong>Сквозной проект</strong>Худи-свитер</div>
+    </div>
+  </div>
+
+  <div class="hook">
+    <div>
+      <h2>Что получишь за эти уровни</h2>
+      <p>Готовую вещь, сшитую от раскроя до финальной обработки швов, и шесть конкретных навыков,
+        которые отличают домашнюю самоделку от вещи, которую не стыдно продать. Что НЕ входит:
+        конструирование выкройки с нуля (берём готовую), швейный бизнес и упаковка/продвижение —
+        это отдельная, следующая история.</p>
+    </div>
+    <div>
+      <h2>Что строим прямо сейчас</h2>
+      <p>Вещь с капюшоном и передом от худи, но рукавами от свитера — то есть придётся состыковать
+        две разные выкройки в одну, а не просто сшить готовый комплект деталей. Именно на этой
+        нестыковке держится половина уроков курса.</p>
+    </div>
+  </div>
+
+  <div class="card diagnostic">
+    <h2>Честно, до старта</h2>
+    <p>Курс исходит из того, что раньше ты не шила вещи такого уровня сложности целиком —
+      если это не так и какие-то шаги окажутся слишком лёгкими, смело пропускай их и сверяйся
+      только с тем, что реально ново. Дело не в том, что «не способна» — дело в том, что до
+      этого момента просто не было повода взяться за проект именно такого масштаба целиком,
+      от раскроя до готовой вещи.</p>
+  </div>
+
+  <div class="pedagogy">
+    <div class="card"><strong>Выготский + Гальперин</strong>Задача чуть выше текущего уровня, но с опорой; сначала готовое действие целиком, потом по шагам, потом сама.</div>
+    <div class="card"><strong>Свеллер, worked example</strong>Сначала показываем готовый разобранный пример, потом — твоё задание.</div>
+    <div class="card"><strong>Родигер и Карпике + Эрикссон</strong>Сделать своими руками закрепляет сильнее, чем просто прочитать; обратная связь — сразу и конкретно.</div>
+    <div class="card"><strong>Метод Кумон</strong>Сверка своего результата с готовым решением — легитимный способ проверить себя, не списывание.</div>
+    <div class="card"><strong>Блум, mastery learning</strong>Не двигаться дальше, пока не закрыла текущий уровень.</div>
+  </div>
+
+  <div class="card howto">
+    <h2>Как проходить</h2>
+    <p>Каждый уровень — реальный шаг именно этого проекта, не абстрактное упражнение на обрезке ткани.
+      Сначала читаешь разобранный пример, потом делаешь то же самое на своей вещи. Подсказки открываются
+      по одной, решение — открыто и честно, без «подглядывания тайком». Отмечай уровень пройденным,
+      когда деталь реально сшита, не когда прочитала до конца.</p>
+  </div>
+
+  <div class="card premise">
+    <h2>Место действия</h2>
+    <p>Перед тобой два комплекта деталей: выкройка обычного худи (перед, спинка, капюшон) и выкройка
+      свитера (рукав реглан или втачной — какой есть). Задача не «сшить худи» и не «сшить свитер»,
+      а собрать из них одну вещь. Начинаем с самого начала — с ткани, до того, как ножницы вообще
+      коснутся материала.</p>
+  </div>
+
+  <!-- Уровень 1 -->
+  <div class="level-card">
+    <div class="level-head"><span class="chapter-num">Глава 1</span><span class="xp-pill">+10 XP</span></div>
+    <h2>Уровень 1. Долевая нить и усадка</h2>
+    <div class="story">
+      <p>Ткань для переда и рукавов — разная: скорее всего, футер (для худи) и трикотаж покрупнее
+        (для свитера). У обеих есть направление, вдоль которого полотно почти не тянется, — долевая
+        нить. Если выкроить деталь наискось от него, готовая вещь со временем перекосится и «уедёт»
+        в сторону, даже если сшита идеально.</p>
+    </div>
+    <div class="new-term">
+      <b>Долевая нить</b> — направление нити в ткани, вдоль которого полотно не растягивается;
+      на выкройках обозначается стрелкой, которую нужно совместить с этим направлением на ткани.
+    </div>
+    <p><b>Разобранный пример.</b> Растяни небольшой лоскут ткани в двух направлениях — вдоль кромки
+      (заводского края рулона) он почти не тянется, поперёк — тянется заметно сильнее. Значит, кромка
+      и есть направление долевой нити. Перед раскроем обе ткани (и футер, и трикотаж) стирают и сушат
+      так же, как будущее готовое изделие, — это и есть проверка на усадку: если ткань «сядет» после
+      раскроя, готовые детали перестанут совпадать по размеру.</p>
+    <div class="quest">
+      <b>Твоё задание.</b> Постирай и высуши оба отреза ткани (для худи и для свитерных рукавов)
+      так, как будешь стирать готовую вещь. Затем на каждом отрезе найди направление долевой нити
+      и приколи к нему полоску бумаги со стрелкой — это будет ориентир при раскладке выкройки.
+    </div>
+    <textarea class="trainer" placeholder="Заметки: какая ткань что тянется/не тянется, где нашла долевую..."></textarea>
+    <div class="hint-row">
+      <details class="hint"><summary>Подсказка 1</summary>Кромка — это плотно обработанный, обычно более светлый или дырчатый край ткани, который остаётся от ткацкого станка.</details>
+      <details class="hint"><summary>Подсказка 2</summary>Если кромки нет (обрезали давно) — растяни ткань в разных направлениях руками: то направление, где растяжение минимально, и есть долевая.</details>
+      <details class="solution"><summary>Показать решение</summary>Долевая нить всегда идёт параллельно кромке ткани. У трикотажа поперёк долевой (по утку) ткань тянется заметно сильнее — это нормально, эта тянущаяся сторона обычно и идёт поперёк тела на рукаве/груди, чтобы вещь садилась по фигуре.</details>
+    </div>
+    <div class="payoff">
+      Вещь, выкроенная точно по долевой, весь свой срок службы держит форму на плечах и не «уползает»
+      на одну сторону после десятой стирки — это ровно то отличие, по которому опытный глаз сразу
+      узнаёт вещь, сшитую не на коленке, даже не разглядывая швы.
+    </div>
+    <div class="done-row"><input type="checkbox" id="done-1"><label for="done-1">Уровень пройден</label></div>
+  </div>
+
+  <!-- Уровень 2 -->
+  <div class="level-card">
+    <div class="level-head"><span class="chapter-num">Глава 2</span><span class="xp-pill">+10 XP</span></div>
+    <h2>Уровень 2. Подгонка готовой выкройки под фигуру</h2>
+    <div class="story">
+      <p>Готовая выкройка худи рассчитана на усреднённую фигуру определённого размера — не на тебя
+        конкретно. Прежде чем резать ткань, нужно приложить выкройку к себе (или к похожей по размеру
+        вещи, которая хорошо сидит) и понять, где она реально совпадает, а где — нет.</p>
+    </div>
+    <div class="new-term">
+      <b>Контрольная мерка</b> — одно конкретное измерение (например, обхват груди или длина рукава
+      до запястья), по которому проверяют, подходит ли размер выкройки, не полагаясь на общий номер
+      размера на пакете.
+    </div>
+    <p><b>Разобранный пример.</b> Возьми свою вещь, которая сидит хорошо, и измерь на ней длину
+      рукава — от плечевого шва до края манжеты. Сравни с длиной рукава на бумажной выкройке
+      (без припусков на швы). Разница больше 1–2 см — повод удлинить или укоротить выкройку
+      именно в этом месте, а не по всей длине пропорционально.</p>
+    <div class="quest">
+      <b>Твоё задание.</b> Сними у себя длину рукава и обхват груди/бёдер (там, где худи должно
+      облегать). Сравни обе цифры с выкройкой и отметь карандашом прямо на бумаге, где и на сколько
+      сантиметров нужно скорректировать.
+    </div>
+    <textarea class="trainer" placeholder="Мои мерки / расхождения с выкройкой..."></textarea>
+    <div class="hint-row">
+      <details class="hint"><summary>Подсказка 1</summary>Меряй по хорошо сидящей вещи, а не по себе напрямую рулеткой — так меньше шанс ошибиться на пару сантиметров.</details>
+      <details class="hint"><summary>Подсказка 2</summary>Корректировку по длине проще всего сделать, разрезав выкройку поперёк в нужном месте и раздвинув/сдвинув половинки на подложенной бумаге — не пытайся стереть и перерисовать контур на глаз.</details>
+      <details class="solution"><summary>Показать решение</summary>Разрежь выкройку по линии, перпендикулярной долевой нити, в районе локтя (для длины рукава) или груди (для ширины) — раздвинь на нужное число сантиметров, подложи снизу лист бумаги и приклей скотчем, восстановив ровный контур.</details>
+    </div>
+    <div class="payoff">
+      Вещь, подогнанная под конкретные мерки, а не «примерно свой размер», перестаёт выглядеть
+      как вещь с рынка — а это уже прямо влияет на то, готов ли будущий покупатель заплатить
+      за неё как за штучную работу, а не как за ширпотреб.
+    </div>
+    <div class="done-row"><input type="checkbox" id="done-2"><label for="done-2">Уровень пройден</label></div>
+  </div>
+
+  <!-- Уровень 3 -->
+  <div class="level-card">
+    <div class="level-head"><span class="chapter-num">Глава 3</span><span class="xp-pill">+15 XP</span></div>
+    <h2>Уровень 3. Настройка машинки под ткань</h2>
+    <div class="story">
+      <p>Прежде чем шить по-настоящему, машинку нужно «договориться» с конкретной тканью — трикотаж
+        и футер ведут себя иначе, чем плотная хлопковая ткань, для которой машинка, возможно,
+        настраивалась в последний раз.</p>
+    </div>
+    <div class="new-term">
+      <b>Пробная строчка</b> — тестовый шов на обрезке той же самой ткани, по которому проверяют
+      натяжение нити и длину стежка, прежде чем шить по основной детали.
+    </div>
+    <div class="honest-note">
+      Честная оговорка: марка твоей машинки неизвестна, а значит, точные цифры настроек (какое
+      деление регулятора натяжения выставить) дать нельзя — они у каждой машинки свои. Ниже —
+      как определить правильную настройку опытным путём, а не по цифрам из инструкции.
+    </div>
+    <p><b>Разобранный пример.</b> На обрезке той же ткани, что пойдёт в дело, сделай строчку длиной
+      10 см. Растяни шов руками поперёк строчки: если нитки рвутся или строчка не тянется вместе
+      с тканью — стежок нужно сделать чуть длиннее (трикотаж должен тянуться вместе со швом,
+      иначе шов лопнет при первой же носке). Если нить снизу видна сверху ткани петлями —
+      натяжение верхней нити слишком слабое, если ткань стягивается «в гармошку» — слишком сильное.</p>
+    <div class="quest">
+      <b>Твоё задание.</b> Сшей три пробных строчки на обрезках обеих тканей (футер и трикотаж
+      от свитера) с разной длиной стежка, растяни каждую руками и выбери ту настройку, при которой
+      шов тянется вместе с тканью и не рвётся.
+    </div>
+    <textarea class="trainer" placeholder="Какая длина стежка подошла для футера, какая — для трикотажа..."></textarea>
+    <div class="hint-row">
+      <details class="hint"><summary>Подсказка 1</summary>Для трикотажа обычно нужен стежок длиннее, чем для обычной хлопковой ткани, — и, если есть, строчка зигзагом вместо прямой (она тоже способна растягиваться).</details>
+      <details class="hint"><summary>Подсказка 2</summary>Игла тоже важна: обычная острая игла может прорезать петли трикотажа — если есть игла с маркировкой «джерси»/«трикотаж» (закруглённый кончик), лучше использовать её.</details>
+      <details class="solution"><summary>Показать решение</summary>Рабочая комбинация для трикотажа на большинстве бытовых машинок: стежок 2.5–3 мм, узкий зигзаг вместо прямой строчки на швах, которые должны тянуться (плечевые, боковые), игла для трикотажа при наличии. Финальную настройку всегда подтверждает пробная строчка на обрезке, не цифры из инструкции.</details>
+    </div>
+    <div class="payoff">
+      Три минуты на пробную строчку — и шов не разойдётся на первой примерке. Разошедшийся шов
+      на видном месте — самая частая причина, по которой начинающую швею перестают воспринимать
+      всерьёз, даже если весь остальной крой сделан отлично.
+    </div>
+    <div class="done-row"><input type="checkbox" id="done-3"><label for="done-3">Уровень пройден</label></div>
+  </div>
+
+  <!-- Уровень 4 -->
+  <div class="level-card">
+    <div class="level-head"><span class="chapter-num">Глава 4</span><span class="xp-pill">+15 XP</span></div>
+    <h2>Уровень 4. Обработка срезов без оверлока</h2>
+    <div class="story">
+      <p>У оверлочных швов подкупает аккуратный обрезанный край — но обычная бытовая машинка
+        с прямой строчкой и зигзагом справляется не хуже, если знать, каким швом закрывать какой край.</p>
+    </div>
+    <div class="new-term">
+      <b>Припуск на шов</b> — расстояние от строчки до края ткани, которое остаётся неразрезанным
+      после стачивания — именно его и нужно обработать, чтобы он не осыпался и не топорщился.
+    </div>
+    <p><b>Разобранный пример.</b> Для трикотажа, который не осыпается сам по себе, достаточно
+      просто пройтись зигзагом по краю припуска после того, как деталь сшита прямой строчкой —
+      это займёт секунды и полностью решает вопрос осыпания. Для более плотного, осыпающегося
+      футера подойдёт «шов вподгибку»: подверни припуск один раз внутрь на 0,5 см и прострочи
+      близко к сгибу — край окажется полностью спрятан.</p>
+    <div class="quest">
+      <b>Твоё задание.</b> На боковом шве худи (там, где встречаются футер переда и трикотаж
+      рукава) сшей деталь прямой строчкой, а затем обработай припуск подходящим для каждой
+      ткани способом с обеих сторон шва.
+    </div>
+    <textarea class="trainer" placeholder="Какой способ выбрала для футера, какой для трикотажа, и почему..."></textarea>
+    <div class="hint-row">
+      <details class="hint"><summary>Подсказка 1</summary>Не пытайся одним и тем же швом обработать обе разные ткани — у них разное поведение края, и то, что подходит трикотажу, может не подойти футеру.</details>
+      <details class="hint"><summary>Подсказка 2</summary>Если ткань сильно осыпается прямо на глазах во время шитья — сначала пройди по самому краю (не подгибая) свободным зигзагом, а уже потом стачивай шов.</details>
+      <details class="solution"><summary>Показать решение</summary>Трикотаж — зигзаг по припуску после стачивания (он не осыпается, задача только зафиксировать край от закручивания). Более плотная осыпающаяся ткань — либо зигзаг по самому краю до стачивания, либо шов вподгибку на 0,5 см, если ткань не слишком толстая для двойного слоя.</details>
+    </div>
+    <div class="payoff">
+      Заглянувший внутрь вещи покупатель первым делом смотрит именно на изнанку швов — необработанный
+      осыпающийся край сразу выдаёт самоделку, даже если снаружи всё выглядит идеально.
+    </div>
+    <div class="done-row"><input type="checkbox" id="done-4"><label for="done-4">Уровень пройден</label></div>
+  </div>
+
+  <!-- Уровень 5 -->
+  <div class="level-card">
+    <div class="level-head"><span class="chapter-num">Глава 5</span><span class="xp-pill">+20 XP</span></div>
+    <h2>Уровень 5. Втачивание рукава от другой выкройки</h2>
+    <div class="story">
+      <p>Вот и момент, ради которого всё затевалось: рукав от свитера нужно вшить в пройму худи —
+        а их окружности почти никогда не совпадают идеально с первого раза, потому что выкройки
+        рисовались для разных вещей.</p>
+    </div>
+    <div class="new-term">
+      <b>Посадка по пройме</b> — небольшая разница в длине между окружностью проймы и окружностью
+      верхней части рукава, которую специально закладывают и равномерно распределяют лёгкими
+      складками, а не срезают.
+    </div>
+    <p><b>Разобранный пример.</b> Приколи рукав к пройме, начиная с четырёх контрольных точек
+      (верх плеча, низ проймы спереди, низ проймы сзади, и середина между ними) — а не просто
+      с одного края до другого. Если рукав длиннее проймы на 1–2 см — это нормальная посадка,
+      её равномерно припосаживают (слегка присборивают пальцами прямо во время шитья, без сборки
+      нитью), а не подрезают, чтобы совпало день в день.</p>
+    <div class="quest">
+      <b>Твоё задание.</b> Сколи рукав от свитера с проймой худи по четырём контрольным точкам,
+      распредели лишнюю длину равномерно и стачай, ориентируясь на контрольные точки, а не на
+      сами края среза.
+    </div>
+    <textarea class="trainer" placeholder="Сколько см разницы получилось между рукавом и проймой..."></textarea>
+    <div class="hint-row">
+      <details class="hint"><summary>Подсказка 1</summary>Если разница в окружности получилась намного больше 2 см — вероятно, дело не в нормальной посадке, а в разнице систем кроя (реглан vs втачной рукав) — тогда сначала стоит подрезать пройму или рукав под общий тип конструкции.</details>
+      <details class="hint"><summary>Подсказка 2</summary>Шей с рукавом сверху (машинка легче «съедает» лишнюю ткань верхним слоем, чем нижним) — и придерживай ткань руками спереди и сзади иглы, а не тяни.</details>
+      <details class="solution"><summary>Показать решение</summary>Сколи по контрольным точкам, разница до 2 см равномерно распределяется без сборки — просто слегка придерживай нижний край рукава пальцами, чтобы машинка «съедала» его чуть быстрее верхнего слоя пройме, шов идёт медленно, короткими участками между булавками.</details>
+    </div>
+    <div class="payoff">
+      Ровно вшитый рукав — без заломов и морщин на плече — это единственная деталь, на которую
+      машинально смотрят все, даже не разбираясь в шитье. Именно рукав чаще всего выдаёт
+      самодельную вещь на глаз с двух метров.
+    </div>
+    <div class="done-row"><input type="checkbox" id="done-5"><label for="done-5">Уровень пройден</label></div>
+  </div>
+
+  <!-- Уровень 6 -->
+  <div class="level-card">
+    <div class="level-head"><span class="chapter-num">Глава 6</span><span class="xp-pill">+20 XP</span></div>
+    <h2>Уровень 6. Капюшон</h2>
+    <div class="story">
+      <p>Последняя деталь, которая превращает толстовку в худи, — капюшон. Обычно он состоит
+        из двух симметричных половинок и шва по макушке, плюс обработка переднего края, который
+        обрамляет лицо и будет виден больше всего.</p>
+    </div>
+    <div class="new-term">
+      <b>Обтачка</b> — дополнительная полоса ткани, которой обрабатывают открытый край (в нашем
+      случае — передний край капюшона), чтобы он не растягивался и не топорщился, в отличие от
+      простой подгибки.
+    </div>
+    <p><b>Разобранный пример.</b> Сшей две половинки капюшона по шву макушки, начиная строчку
+      точно от одной контрольной метки и заканчивая на другой, не «съезжая» по ходу шва — на
+      этом изгибе легче всего уйти в сторону. Передний край капюшона обработай узкой обтачкой
+      или просто плотным двойным подгибом — этот край не должен тянуться, иначе капюшон со
+      временем «провиснет» вокруг лица.</p>
+    <div class="quest">
+      <b>Твоё задание.</b> Стачай половинки капюшона по контрольным меткам, обработай передний
+      край выбранным способом и втачай готовый капюшон в горловину худи.
+    </div>
+    <textarea class="trainer" placeholder="Как обработала передний край, что получилось..."></textarea>
+    <div class="hint-row">
+      <details class="hint"><summary>Подсказка 1</summary>Перед тем как втачивать капюшон в горловину, приколи его целиком и проверь на себе (или на манекене/подушке) — легче переколоть булавку сейчас, чем распарывать готовый шов.</details>
+      <details class="hint"><summary>Подсказка 2</summary>Горловина у трикотажа обычно чуть меньше окружности капюшона в этом месте — это нормально, тот же принцип равномерной посадки, что и с рукавом.</details>
+      <details class="solution"><summary>Показать решение</summary>Сколи капюшон с горловиной по центру спинки, двум плечевым швам и центру переда — это те же четыре контрольные точки, что и у рукава, лишнюю длину распредели равномерно, шов веди со стороны капюшона.</details>
+    </div>
+    <div class="payoff">
+      Вещь готова целиком. Капюшон — последнее, что видит человек, примеряющий худи перед
+      зеркалом, и по нему же он решает, доверять ли остальной вещи, — ровный край и аккуратная
+      посадка здесь стоят непропорционально больше пяти минут, которые на них уходят.
+    </div>
+    <div class="done-row"><input type="checkbox" id="done-6"><label for="done-6">Уровень пройден</label></div>
+  </div>
+
+  <div class="milestone">
+    <h2>Вещь готова</h2>
+    <p>От постиранного и размеченного отреза ткани до сшитого худи-свитера с состыкованными
+      выкройками — целиком твоими руками, на машинке, которая умеет только прямую строчку
+      и зигзаг. Этого достаточно для вещи, за которую не стыдно попросить деньги.</p>
+  </div>
+
+  <div class="roadmap">
+    <h2>Куда расти дальше</h2>
+    <ul>
+      <li>Отделочная строчка и петли для пуговиц — то, что отличает вещь «на грани профессиональной».</li>
+      <li>Подгонка одной и той же выкройки под разные фигуры — если шить не только на себя.</li>
+      <li>Расчёт себестоимости вещи (ткань, фурнитура, время) — чтобы понимать, за сколько продавать не в убыток.</li>
+    </ul>
+  </div>
+
+  <div class="ending">
+    <p>Курс заканчивается здесь, но вещь дошивается не на экране — в руках, за машинкой, той самой,
+      что размером с крупного карася. Каждый следующий проект после этого будет уже немного другим
+      разговором с тканью.</p>
+  </div>
+
+  <footer class="note">курс «Худи-свитер» · для Маши · 2026</footer>
+</div>
+
+<script>
+  var slug = 'kurs-shite';
+  var checkboxes = document.querySelectorAll('.done-row input[type="checkbox"]');
+  var bar = document.getElementById('progress-bar');
+  var label = document.getElementById('progress-label');
+
+  function updateProgress() {
+    var done = 0;
+    checkboxes.forEach(function (cb) { if (cb.checked) done++; });
+    bar.style.width = (done / checkboxes.length * 100) + '%';
+    label.textContent = done + ' из ' + checkboxes.length + ' уровней пройдено';
+  }
+
+  checkboxes.forEach(function (cb) {
+    var saved = localStorage.getItem(slug + '-' + cb.id);
+    if (saved === 'true') cb.checked = true;
+    cb.addEventListener('change', function () {
+      localStorage.setItem(slug + '-' + cb.id, cb.checked);
+      updateProgress();
+    });
+  });
+  updateProgress();
+
+  var toggle = document.getElementById('tasks-only-toggle');
+  var tasksOnlyKey = slug + '-tasks-only';
+  if (localStorage.getItem(tasksOnlyKey) === 'true') document.body.classList.add('tasks-only');
+  toggle.addEventListener('click', function () {
+    document.body.classList.toggle('tasks-only');
+    localStorage.setItem(tasksOnlyKey, document.body.classList.contains('tasks-only'));
+  });
+</script>
+</body>
+</html>
