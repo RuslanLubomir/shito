@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light only">
+<title>Раздел товаров — прототип</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<!--
+  ПРОТОТИП по регламенту «Регламент на HTML-страницу (товарные/внутренние страницы)».
+
+  Источники решений:
+  - Референс-сайт мя.regsolutions.site — реальные значения сняты напрямую из
+    его CSS (не на глаз): цвета, шрифт, система скруглений. См. ниже.
+  - 02-принципы-проектов/стиль_фронтенда.md — отступы по 4-точечной сетке,
+    пилюли (border-radius:999px) для тегов/кнопок, инлайн-SVG-иконки,
+    семантический HTML, доступность.
+
+  ЧЕСТНАЯ ОГОВОРКА ПРО ШРИФТ: у референса шрифт "Mabry Pro" — платный,
+  в Google Fonts его нет. Ниже подключён "Manrope" (бесплатный, похожий по
+  духу геометричный гротеск) как временная замена — решение утвердить
+  отдельно, не финальное.
+
+  ЧЕСТНАЯ ОГОВОРКА ПРО СОДЕРЖИМОЕ: товары ниже — примеры-заглушки
+  («Товар 1/2/3»), реальных данных о продукте у меня не было. Замени на
+  настоящие карточки перед использованием.
+-->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    /* --- реальные значения, снятые с мя.regsolutions.site --- */
+    --ink: #2b2d33;
+    --paper: #FFFFFF;
+    --card-bg: #F5EBFA;      /* лавандовый — регламент: "карточки на мягком лавандовом фоне" */
+    --card-bg-alt: #F2E4D5;  /* тёплый бежевый — для блока "Факты", разнообразие тонов */
+    --accent: #2b2d33;       /* кнопка "Заказать" — тёмная, высокий контраст */
+    --accent-ink: #FFFFFF;
+    --link: #265cff;         /* синий акцент референса */
+    --muted: #6b6d73;
+    --line: #E7E7E7;
+    /* пастельные тона тегов — тоже реальные оттенки с референса */
+    --tag-1-bg: #FFE7EB; --tag-1-ink: #b21233;
+    --tag-2-bg: #FFF1E9; --tag-2-ink: #bb4200;
+    --tag-3-bg: #FFF4DB; --tag-3-ink: #8a6300;
+    --tag-4-bg: #E8F7F4; --tag-4-ink: #006659;
+
+    /* скругления — единый радиус по системе референса (диапазон ~10-24px) */
+    --radius: 20px;
+    --radius-sm: 12px;
+
+    /* отступы — 4-точечная сетка, стиль_фронтенда.md раздел 5 п.2 */
+    --space-1: 4px; --space-2: 8px; --space-3: 12px; --space-4: 16px; --space-5: 24px; --space-6: 32px;
+
+    --font-body: "Manrope", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; }
+  body {
+    font-family: var(--font-body);
+    color: var(--ink);
+    background: var(--paper);
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+  }
+  img { max-width: 100%; display: block; }
+
+  /* ---- шапка ---- */
+  .site-header {
+    display: flex; align-items: center; gap: var(--space-3);
+    padding: var(--space-4) var(--space-5);
+    border-bottom: 1px solid var(--line);
+  }
+  .site-header-badge {
+    width: 40px; height: 40px; border-radius: var(--radius-sm);
+    background: var(--card-bg); display: flex; align-items: center; justify-content: center; flex: 0 0 auto;
+  }
+  .site-header h1 { font-size: 1.1rem; font-weight: 700; margin: 0; }
+
+  /* ---- блок "о разделе" ---- */
+  .intro { padding: var(--space-6) var(--space-5) var(--space-4); max-width: 720px; }
+  .intro p { color: var(--muted); font-size: 0.98rem; margin: var(--space-2) 0 0; }
+
+  /* ---- сетка карточек ---- */
+  .grid {
+    display: grid; grid-template-columns: 1fr; gap: var(--space-5);
+    padding: var(--space-4) var(--space-5) var(--space-6);
+  }
+  @media (min-width: 640px) { .grid { grid-template-columns: repeat(2, 1fr); } }
+  @media (min-width: 1024px) { .grid { grid-template-columns: repeat(3, 1fr); } }
+
+  .card {
+    background: var(--card-bg);
+    border-radius: var(--radius);
+    padding: var(--space-4);
+    display: flex; flex-direction: column; gap: var(--space-3);
+  }
+  .card-image {
+    width: 100%; aspect-ratio: 4 / 3; border-radius: var(--radius-sm);
+    background: var(--paper); overflow: hidden;
+  }
+  .card-image img { width: 100%; height: 100%; object-fit: cover; }
+  .card h2 { font-size: 1.05rem; font-weight: 700; margin: 0; }
+  .card p.desc {
+    font-size: 0.9rem; color: var(--muted); margin: 0;
+    display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+  }
+  .tags { display: flex; flex-wrap: wrap; gap: var(--space-2); }
+  .tag {
+    font-size: 0.78rem; font-weight: 600; padding: 4px 12px; border-radius: 999px;
+  }
+  .btn-order {
+    margin-top: var(--space-2);
+    background: var(--accent); color: var(--accent-ink);
+    border: none; border-radius: 999px; padding: 10px 20px;
+    font-family: var(--font-body); font-size: 0.92rem; font-weight: 700; cursor: pointer;
+    transition: opacity .15s;
+  }
+  .btn-order:hover { opacity: .85; }
+  .btn-order:focus-visible { outline: 2px solid var(--link); outline-offset: 2px; }
+
+  /* ---- блок "факты" (опционально, по регламенту) ---- */
+  .facts { padding: var(--space-4) var(--space-5) var(--space-6); }
+  .facts-grid { display: grid; grid-template-columns: 1fr; gap: var(--space-4); margin-top: var(--space-4); }
+  @media (min-width: 640px) { .facts-grid { grid-template-columns: repeat(3, 1fr); } }
+  .fact { background: var(--card-bg-alt); border-radius: var(--radius); padding: var(--space-4); }
+  .fact strong { display: block; font-size: 1rem; margin-bottom: var(--space-1); }
+  .fact span { font-size: 0.88rem; color: var(--muted); }
+
+  /* ---- форма заказа (разворачивающийся блок, не модалка/переход) ---- */
+  .order-panel {
+    position: fixed; inset: auto 0 0 0; z-index: 30;
+    background: var(--paper); border-top: 1px solid var(--line);
+    border-radius: var(--radius) var(--radius) 0 0;
+    padding: var(--space-5); box-shadow: 0 -8px 30px rgba(0,0,0,0.12);
+    transform: translateY(110%); transition: transform .25s ease-out;
+    max-height: 80vh; overflow-y: auto;
+  }
+  .order-panel.open { transform: translateY(0); }
+  .order-panel h3 { margin: 0 0 var(--space-3); font-size: 1.05rem; }
+  .order-field { margin-bottom: var(--space-3); }
+  .order-field label { display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: var(--space-1); }
+  .order-field input, .order-field textarea {
+    width: 100%; border: 1px solid var(--line); border-radius: var(--radius-sm);
+    padding: 8px 12px; font-family: var(--font-body); font-size: 0.92rem; color: var(--ink);
+  }
+  .order-field input:focus-visible, .order-field textarea:focus-visible {
+    outline: none; border-color: var(--link); box-shadow: 0 0 0 3px rgba(38,92,255,0.15);
+  }
+  .order-close {
+    position: absolute; top: var(--space-3); right: var(--space-4);
+    background: none; border: none; font-size: 1.3rem; cursor: pointer; color: var(--muted);
+  }
+  .order-backdrop {
+    position: fixed; inset: 0; background: rgba(43,45,51,0.35); z-index: 20;
+    opacity: 0; pointer-events: none; transition: opacity .2s;
+  }
+  .order-backdrop.open { opacity: 1; pointer-events: auto; }
+</style>
+</head>
+<body>
+
+  <header class="site-header">
+    <span class="site-header-badge" aria-hidden="true">
+      <svg viewBox="0 0 20 20" width="22" height="22" fill="none" stroke="var(--ink)" stroke-width="1.5">
+        <rect x="3" y="6" width="14" height="10" rx="2"/><path d="M6 6V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v1"/>
+      </svg>
+    </span>
+    <h1>Раздел товаров — прототип</h1>
+  </header>
+
+  <section class="intro">
+    <p class="lede" style="font-weight:700; font-size:1.15rem; margin:0;">О разделе</p>
+    <p>Короткий текст о том, что здесь предлагается. Заменить на настоящее описание раздела/бренда.</p>
+  </section>
+
+  <section class="grid">
+    <!-- Карточка 1 -->
+    <article class="card">
+      <div class="card-image">
+        <img src="https://placehold.co/480x360/F5EBFA/2b2d33?text=Товар+1" alt="Товар 1" loading="eager">
+      </div>
+      <h2>Товар 1 — пример названия</h2>
+      <p class="desc">Короткое описание товара в одну-две строки — что это и чем полезно.</p>
+      <div class="tags">
+        <span class="tag" style="background:var(--tag-1-bg); color:var(--tag-1-ink);">новинка</span>
+        <span class="tag" style="background:var(--tag-4-bg); color:var(--tag-4-ink);">в наличии</span>
+      </div>
+      <button type="button" class="btn-order" data-product="Товар 1 — пример названия">Заказать</button>
+    </article>
+
+    <!-- Карточка 2 -->
+    <article class="card">
+      <div class="card-image">
+        <img src="https://placehold.co/480x360/F2E4D5/2b2d33?text=Товар+2" alt="Товар 2" loading="lazy">
+      </div>
+      <h2>Товар 2 — пример названия</h2>
+      <p class="desc">Короткое описание товара в одну-две строки — что это и чем полезно.</p>
+      <div class="tags">
+        <span class="tag" style="background:var(--tag-2-bg); color:var(--tag-2-ink);">хит</span>
+      </div>
+      <button type="button" class="btn-order" data-product="Товар 2 — пример названия">Заказать</button>
+    </article>
+
+    <!-- Карточка 3 -->
+    <article class="card">
+      <div class="card-image">
+        <img src="https://placehold.co/480x360/FFE7EB/2b2d33?text=Товар+3" alt="Товар 3" loading="lazy">
+      </div>
+      <h2>Товар 3 — пример названия</h2>
+      <p class="desc">Короткое описание товара в одну-две строки — что это и чем полезно.</p>
+      <div class="tags">
+        <span class="tag" style="background:var(--tag-3-bg); color:var(--tag-3-ink);">акция</span>
+        <span class="tag" style="background:var(--tag-4-bg); color:var(--tag-4-ink);">в наличии</span>
+      </div>
+      <button type="button" class="btn-order" data-product="Товар 3 — пример названия">Заказать</button>
+    </article>
+  </section>
+
+  <section class="facts">
+    <p style="font-weight:700; font-size:1.15rem; margin:0;">Факты</p>
+    <div class="facts-grid">
+      <div class="fact"><strong>Факт 1</strong><span>Короткое пояснение — пример, заменить на реальное.</span></div>
+      <div class="fact"><strong>Факт 2</strong><span>Короткое пояснение — пример, заменить на реальное.</span></div>
+      <div class="fact"><strong>Факт 3</strong><span>Короткое пояснение — пример, заменить на реальное.</span></div>
+    </div>
+  </section>
+
+  <!-- Форма заказа: разворачивающийся блок снизу, без перехода на другой URL -->
+  <div class="order-backdrop" id="order-backdrop"></div>
+  <form class="order-panel" id="order-panel" aria-hidden="true">
+    <button type="button" class="order-close" id="order-close" aria-label="Закрыть">×</button>
+    <h3>Заказать: <span id="order-product-name">—</span></h3>
+    <input type="hidden" id="order-product-field" name="product">
+    <div class="order-field">
+      <label for="order-name">Имя</label>
+      <input type="text" id="order-name" name="name" required>
+    </div>
+    <div class="order-field">
+      <label for="order-contact">Контакт (телефон или телеграм)</label>
+      <input type="text" id="order-contact" name="contact" required>
+    </div>
+    <div class="order-field">
+      <label for="order-comment">Комментарий (необязательно)</label>
+      <textarea id="order-comment" name="comment" rows="2"></textarea>
+    </div>
+    <!--
+      Куда уходят данные (API/почта/бот) — уточняется отдельно на этапе
+      интеграции (регламент, раздел "Форма заказа"). Пока форма ничего
+      никуда не отправляет — только открывается/закрывается и подставляет
+      товар. data-атрибуты и id уже готовы для последующей навески обработчика.
+    -->
+    <button type="submit" class="btn-order" style="width:100%;">Отправить</button>
+  </form>
+
+  <script>
+    // Минимальный нативный JS, без фреймворков — по регламенту и стиль_фронтенда.md.
+    const backdrop = document.getElementById('order-backdrop');
+    const panel = document.getElementById('order-panel');
+    const nameSpan = document.getElementById('order-product-name');
+    const productField = document.getElementById('order-product-field');
+
+    function openOrder(productName) {
+      nameSpan.textContent = productName;
+      productField.value = productName;
+      backdrop.classList.add('open');
+      panel.classList.add('open');
+      panel.setAttribute('aria-hidden', 'false');
+    }
+    function closeOrder() {
+      backdrop.classList.remove('open');
+      panel.classList.remove('open');
+      panel.setAttribute('aria-hidden', 'true');
+    }
+
+    document.querySelectorAll('.btn-order[data-product]').forEach(btn => {
+      btn.addEventListener('click', () => openOrder(btn.dataset.product));
+    });
+    document.getElementById('order-close').addEventListener('click', closeOrder);
+    backdrop.addEventListener('click', closeOrder);
+
+    panel.addEventListener('submit', (e) => {
+      e.preventDefault();
+      // Здесь появится реальная отправка (API/почта/бот) на этапе интеграции.
+      alert('Заявка готова к отправке (обработчик подключается отдельно): ' + productField.value);
+      closeOrder();
+    });
+  </script>
+
+</body>
+</html>
