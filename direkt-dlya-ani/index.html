@@ -1,0 +1,541 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Яндекс.Директ с нуля — короткая инструкция</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>📢</text></svg>">
+<style>
+  :root {
+    --paper: #FFFFFF; --raised: #FFFFFF; --ink: #241F1C; --muted: #726A64; --muted-2: #A69C94;
+    --line: #E8E1DA; --line-soft: #F2ECE6; --accent: #B3001B; --accent-bg: #FBE7E9; --accent-line: #EAB8BE;
+    --gold: #C77F00; --gold-bg: #FBF0DA;
+    --pos: #1A7F4E; --pos-bg: #E4F3EA; --warn: #9A6A16; --warn-bg: #FBF0DA;
+    --shadow-sm: 0 1px 2px rgba(30,20,15,0.05);
+    --shadow: 0 1px 2px rgba(30,20,15,0.05), 0 8px 22px -10px rgba(30,20,15,0.16);
+    --radius: 14px; --radius-sm: 9px;
+    --font-display: ui-serif, "Iowan Old Style", Georgia, serif;
+    --font-body: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+    --font-mono: ui-monospace, "SF Mono", "Cascadia Code", Consolas, monospace;
+    --space-2: 8px; --space-3: 12px; --space-4: 16px; --space-5: 24px;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--paper); color: var(--ink); font-family: var(--font-body);
+    font-size: 0.95rem; line-height: 1.58; }
+  .wrap { max-width: 720px; margin: 0 auto; padding: var(--space-5) var(--space-4) 100px; }
+  h1 { font-family: var(--font-display); font-size: 1.7rem; margin: 0 0 var(--space-2); }
+  h2 { font-size: 1.1rem; margin: var(--space-4) 0 var(--space-2); }
+  .lede { color: var(--muted); margin-bottom: var(--space-5); }
+  .theory { background: var(--accent-bg); border-radius: var(--radius-sm); padding: var(--space-3) var(--space-4);
+    font-size: 0.9rem; margin: var(--space-3) 0; }
+  .pedagogy { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-3); margin: var(--space-4) 0 var(--space-5); }
+  @media (max-width: 560px) { .pedagogy { grid-template-columns: 1fr; } }
+  .pedagogy .card { background: var(--raised); border: 1px solid var(--line); border-radius: var(--radius-sm);
+    padding: var(--space-3); font-size: 0.83rem; }
+  .pedagogy .card strong { display: block; margin-bottom: 4px; }
+  .step { background: var(--raised); border: 1px solid var(--line); border-radius: var(--radius);
+    padding: var(--space-4); margin: var(--space-4) 0; box-shadow: var(--shadow-sm); }
+  .example { border-left: 3px solid var(--accent); padding: var(--space-2) var(--space-4); margin: var(--space-3) 0;
+    font-size: 0.9rem; color: var(--muted); }
+  .scope-note { background: var(--gold-bg); border-radius: var(--radius-sm); padding: var(--space-3) var(--space-4);
+    font-size: 0.85rem; color: var(--warn); margin: var(--space-4) 0; }
+  .quest { border-left: 3px solid var(--gold); padding: var(--space-2) var(--space-4); margin: var(--space-4) 0; }
+  details.hint, details.solution { border: 1px solid var(--line); border-radius: var(--radius-sm);
+    padding: var(--space-2) var(--space-3); margin-bottom: var(--space-2); font-size: 0.88rem; }
+  details.solution summary { color: var(--pos); font-weight: 600; }
+  .checklist { background: var(--pos-bg); border-radius: var(--radius-sm); padding: var(--space-4);
+    margin: var(--space-4) 0; font-size: 0.9rem; }
+  .checklist ul { margin: var(--space-2) 0 0; padding-left: var(--space-4); }
+  table.sravnenie { width: 100%; border-collapse: collapse; font-size: 0.82rem; margin: var(--space-3) 0; }
+  table.sravnenie th, table.sravnenie td { border: 1px solid var(--line); padding: 8px 10px; text-align: left; vertical-align: top; }
+  table.sravnenie th { background: var(--line-soft); font-weight: 700; }
+  table.slovar { width: 100%; border-collapse: collapse; font-size: 0.86rem; margin: var(--space-3) 0; }
+  table.slovar td { padding: 6px 8px; border-bottom: 1px solid var(--line-soft); }
+  table.slovar td:first-child { font-weight: 700; white-space: nowrap; padding-right: var(--space-3); }
+  .done-row { display: flex; align-items: center; gap: var(--space-2); margin-top: var(--space-4);
+    padding-top: var(--space-3); border-top: 1px dashed var(--line); }
+
+  /* ---------- тренажёр ---------- */
+  .sim { background: #1E1B1A; border-radius: var(--radius); padding: var(--space-5); margin: var(--space-4) 0; }
+  .sim-shell { background: var(--paper); border-radius: var(--radius-sm); overflow: hidden; }
+  .sim-top { background: var(--accent); color: #fff; padding: var(--space-3) var(--space-4); font-weight: 700;
+    display: flex; justify-content: space-between; align-items: center; }
+  .sim-top .step-indicator { font-size: 0.78rem; font-weight: 400; opacity: 0.9; }
+  .sim-body { padding: var(--space-4); }
+  .sim-field { margin-bottom: var(--space-3); }
+  .sim-field label { display: block; font-size: 0.82rem; color: var(--muted); margin-bottom: 4px; }
+  .sim-field input, .sim-field select, .sim-field textarea { width: 100%; padding: 9px 11px; border: 1px solid var(--line);
+    border-radius: var(--radius-sm); font-size: 0.92rem; font-family: var(--font-body); background: var(--paper); }
+  .sim-field textarea { resize: vertical; min-height: 60px; }
+  .sim-chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
+  .sim-chip { background: var(--accent-bg); color: var(--accent); border-radius: 999px; padding: 3px 10px; font-size: 0.78rem;
+    display: flex; align-items: center; gap: 6px; }
+  .sim-chip button { background: none; border: none; color: var(--accent); cursor: pointer; font-weight: 700; padding: 0; }
+  .sim-btn { background: var(--accent); color: #fff; border: none; border-radius: var(--radius-sm); padding: 9px 16px;
+    font-size: 0.9rem; font-weight: 600; cursor: pointer; }
+  .sim-btn:hover { filter: brightness(1.08); }
+  .sim-btn.secondary { background: var(--line-soft); color: var(--ink); }
+  .sim-nav { display: flex; justify-content: space-between; margin-top: var(--space-4); }
+  .ad-preview { border: 1px solid var(--line); border-radius: var(--radius-sm); padding: var(--space-3);
+    background: #FCFAF8; margin-top: var(--space-3); }
+  .ad-preview .yandex-badge { color: var(--pos); font-size: 0.72rem; font-weight: 700; }
+  .ad-preview .title { color: #1A0DAB; font-size: 1.05rem; margin: 2px 0; }
+  .ad-preview .link { color: var(--pos); font-size: 0.8rem; }
+  .ad-preview .text { color: var(--ink); font-size: 0.85rem; }
+  .stat-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: var(--space-2); margin: var(--space-3) 0; }
+  @media (max-width: 560px) { .stat-grid { grid-template-columns: 1fr 1fr; } }
+  .stat-tile { background: var(--line-soft); border-radius: var(--radius-sm); padding: var(--space-3); text-align: center; }
+  .stat-tile .val { font-size: 1.2rem; font-weight: 700; }
+  .stat-tile .lbl { font-size: 0.72rem; color: var(--muted); }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Яндекс.Директ с нуля</h1>
+  <p class="lede">Короткая инструкция для тех, кто вообще не работал с рекламными кабинетами - от
+    "что здесь происходит" до уверенного понимания, где какая кнопка и зачем.</p>
+
+  <div class="pedagogy">
+    <div class="card"><strong>Советская школа (Выготский, Гальперин)</strong>Сначала показываем готовое действие целиком, потом по шагам, потом сам.</div>
+    <div class="card"><strong>Свеллер, worked example</strong>Перед заданием - разобранный пример, не наоборот.</div>
+    <div class="card"><strong>Западная когнитивная наука (Родигер, Карпике, Эрикссон)</strong>Сделать самому закрепляет сильнее, чем прочитать.</div>
+    <div class="card"><strong>Японская школа (метод Кумон)</strong>Готовое решение открыто рядом - сверка, не списывание.</div>
+    <div class="card"><strong>Блум, mastery learning</strong>Чек-лист самопроверки перед тем, как идти дальше.</div>
+  </div>
+
+  <div class="scope-note">
+    Честно сразу: Яндекс время от времени переставляет кнопки и переименовывает разделы кабинета -
+    это происходило и раньше, будет происходить и дальше. Здесь - устройство и логика, которые
+    держатся годами, а не точная карта пикселей интерфейса на сегодняшний день. Если что-то в
+    реальном кабинете называется чуть иначе - это не ошибка инструкции, а естественная жизнь
+    интерфейса.
+  </div>
+
+  <div class="step">
+    <h2>Зачем вообще существует Яндекс.Директ</h2>
+    <p class="theory">
+      <b>Теория.</b> Когда человек что-то ищет в Яндексе, часть результатов - объявления рекламодателей,
+      а не обычная выдача. За место в этих объявлениях рекламодатели соревнуются между собой -
+      автоматически, через аукцион: чем больше готов заплатить рекламодатель и чем чаще на его
+      объявление реально кликают, тем выше оно показывается. Директ - это и есть кабинет, через
+      который рекламодатель участвует в этом аукционе: настраивает, кому, где и на каких условиях
+      показывать объявление.
+    </p>
+    <div class="example">
+      <b>Пример.</b> Человек ищет "заказать пиццу в Казани". Часть ресторанов Казани платят за
+      показ именно по этому запросу - их объявления Яндекс показывает первыми, помечая как рекламу.
+      Ресторан платит не за сам показ, а обычно за клик - то есть за реального человека, который
+      перешёл на сайт.
+    </div>
+  </div>
+
+  <div class="step">
+    <h2>Из чего состоит рекламный кабинет</h2>
+    <p class="theory">
+      <b>Теория.</b> Внутри кабинета - трёхэтажная структура. <b>Кампания</b> - самый крупный уровень,
+      в ней задаются общие условия: бюджет, цель, период показа. Внутри кампании - одна или несколько
+      <b>групп объявлений</b>, у каждой группы - свои условия показа (например, свой гео-таргетинг
+      или свои ключевые фразы). Внутри группы - сами <b>объявления</b>: то, что реально увидит
+      человек (заголовок, текст, ссылка, картинка).
+    </p>
+    <div class="example">
+      <b>Пример.</b> Кампания "Реклама пиццерии" → группа "Доставка в центре города" (показывается
+      только по центральным районам) и группа "Доставка на окраинах" (показывается в других районах,
+      возможно с другой ценой доставки в тексте объявления) → в каждой группе своё объявление с
+      подходящим текстом.
+    </div>
+    <div class="checklist" style="margin-top:0">
+      <b>Проверь себя.</b> Если нужно показывать разные тексты объявлений для разных городов - это
+      разные кампании или разные группы внутри одной кампании?
+      <details class="solution" style="margin-top:8px"><summary>Ответ</summary>Чаще разумнее -
+      разные группы внутри одной кампании (общий бюджет и цель одни и те же, отличаются только
+      условия показа и текст). Отдельные кампании имеют смысл, когда логично разделить и бюджет
+      тоже - например, у разных городов разные рекламные бюджеты.</details>
+    </div>
+  </div>
+
+  <div class="step">
+    <h2>Типы кампаний</h2>
+    <p class="theory">
+      <b>Теория.</b> В кабинете обычно несколько вариантов "с чего начать кампанию" - конкретные
+      названия и набор вариантов у Яндекса менялись за последние годы, но смысл держится: есть
+      кампании, ориентированные на поиск и рекламную сеть Яндекса (РСЯ - партнёрские сайты и
+      приложения, где тоже показываются объявления Директа), есть отдельный вариант для товарных
+      каталогов (загружаешь фид товаров - Яндекс сам собирает объявления под каждый товар), и есть
+      более автоматизированные варианты, где Яндекс сам решает, где и кому показать объявление,
+      исходя из заданной цели (например, "получить больше заявок") и статистики.
+    </p>
+    <div class="example">
+      <b>Пример.</b> Интернет-магазин одежды с каталогом на 2000 товаров скорее выберет товарную
+      кампанию (не писать же 2000 объявлений руками) - а локальная студия маникюра с одной услугой
+      скорее возьмёт обычную кампанию с несколькими объявлениями и ключевыми фразами.
+    </div>
+  </div>
+
+  <div class="step">
+    <h2>Ключевые фразы, минус-слова и ставки</h2>
+    <p class="theory">
+      <b>Теория.</b> Для поисковых объявлений задаются ключевые фразы - по каким запросам
+      показывать объявление. К ним обязательно добавляют минус-слова - слова, при которых
+      показывать НЕ надо, чтобы не платить за нерелевантные клики. Ставка - сколько рекламодатель
+      готов заплатить за клик по этой фразе; итоговая позиция в аукционе зависит не только от
+      ставки, но и от прогнозируемого CTR (насколько часто по такому объявлению вообще кликают) -
+      поэтому более привлекательное объявление может обойти конкурента с более высокой ставкой.
+    </p>
+    <div class="example">
+      <b>Пример.</b> Ключевая фраза "ремонт стиральных машин" с минус-словом "-своими -руками" -
+      объявление не покажется тем, кто ищет инструкцию сделать ремонт самому, а не заказать мастера.
+    </div>
+    <div class="quest">
+      <b>Задание на подумать.</b> Салон штор дал ключевую фразу "пошив штор" без минус-слов.
+      Через месяц заметил много кликов и ни одной заявки. В поисковых запросах, по которым были
+      показы, часто встречается слово "видео". Какое минус-слово стоит добавить?
+    </div>
+    <div class="hint-row">
+      <details class="hint"><summary>Подсказка</summary>Подумай, что именно ищут люди, которые
+      пишут "пошив штор" рядом со словом "видео".</details>
+      <details class="solution"><summary>Показать разбор</summary>Скорее всего, это запрос "пошив
+      штор видео" - человек ищет видео-урок, как шить самому, а не заказать услугу. Минус-слово
+      "-видео" отсечёт нецелевые клики.</details>
+    </div>
+  </div>
+
+  <div class="step">
+    <h2>Таргетинги: кому вообще показывать</h2>
+    <p class="theory">
+      <b>Теория.</b> Кроме ключевых фраз, показ можно ограничить: по <b>гео</b> (город, район,
+      радиус вокруг точки), по <b>времени</b> (например, не показывать ночью, если некому отвечать
+      на звонки), по <b>аудиториям</b> (загруженная своя база контактов, похожие на неё пользователи,
+      или ретаргетинг - показ тем, кто уже был на сайте, но не оставил заявку). Ретаргетинг и
+      аудитории обычно работают через связку с Яндекс.Метрикой (веб-аналитика Яндекса) и
+      Яндекс.Аудиториями - отдельным сервисом для загрузки и сегментирования баз контактов.
+    </p>
+  </div>
+
+  <div class="step">
+    <h2>Бюджет, ставки и автостратегии</h2>
+    <p class="theory">
+      <b>Теория.</b> Управлять ставками можно вручную (самому выставлять цену за клик по каждой
+      фразе) или доверить это автостратегии - алгоритму Яндекса, который сам двигает ставки, чтобы
+      выполнить заданную цель (например, "максимум кликов в рамках бюджета" или "максимум
+      конверсий по заданной цене"). Автостратегиям, которые оптимизируют под конверсии, нужны
+      подключённые цели в Метрике - без данных о реальных заявках алгоритму нечего оптимизировать.
+      Деньги списываются с баланса кабинета, который пополняется заранее; дневной или недельный
+      лимit защищает от того, что бюджет всего месяца спишется за один активный день.
+    </p>
+    <div class="checklist" style="margin-top:0">
+      <b>Проверь себя.</b> У новой кампании ещё нет статистики и не подключены цели в Метрике.
+      Автостратегия по конверсиям запустится сразу эффективно, средне или не запустится вовсе?
+      <details class="solution" style="margin-top:8px"><summary>Ответ</summary>Скорее всего плохо
+      или вообще не наберёт данных: алгоритму не на чем учиться. Для новой кампании часто разумнее
+      начать с ручных ставок или простой стратегии (например, "максимум кликов"), а на автостратегию
+      по конверсиям переходить, когда накопится статистика.</details>
+    </div>
+  </div>
+
+  <div class="step">
+    <h2>Модерация: почему объявление могут не пропустить</h2>
+    <p class="theory">
+      <b>Теория.</b> Каждое объявление перед показом проверяет модерация - на соответствие закону
+      о рекламе и правилам самого Яндекса. Частые причины отказа: превосходная степень без
+      доказательства ("лучший", "№1" - нужно подтверждение), отсутствие обязательных пометок для
+      некоторых категорий (лекарства, финансовые услуги, алкоголь), нерабочая или незавершённая
+      посадочная страница, несоответствие текста объявления содержимому сайта.
+    </p>
+  </div>
+
+  <div class="step">
+    <h2>Аналитика: как понять, что реклама вообще работает</h2>
+    <p class="theory">
+      <b>Теория.</b> Статистика в кабинете и данные Метрики отвечают на вопрос "стоило ли это
+      денег". Словарик базовых метрик:
+    </p>
+    <table class="slovar">
+      <tr><td>Показы</td><td>сколько раз объявление вообще увидели</td></tr>
+      <tr><td>Клики</td><td>сколько раз по нему перешли на сайt</td></tr>
+      <tr><td>CTR</td><td>клики делить на показы - насколько объявление вообще привлекает внимание</td></tr>
+      <tr><td>Цена клика (CPC)</td><td>сколько в среднем стоил один переход</td></tr>
+      <tr><td>Конверсия</td><td>целевое действие на сайте - заявка, покупка, звонок</td></tr>
+      <tr><td>Цена цели (CPA)</td><td>сколько в среднем стоила одна такая заявка</td></tr>
+      <tr><td>ДРР</td><td>доля рекламных расходов - сколько процентов от выручки съела реклама</td></tr>
+    </table>
+  </div>
+
+  <div class="step">
+    <h2>Чем это отличается от других кабинетов</h2>
+    <p class="theory">
+      <b>Теория.</b> Логика "аукцион + таргетинг + бюджет" общая почти для всех рекламных платформ -
+      разница в том, что именно является главным сигналом для показа, и насколько кабинет вообще
+      доступен и практичен для российского рекламодателя сейчас.
+    </p>
+    <table class="sravnenie">
+      <tr><th>Платформа</th><th>Главный сигнал таргетинга</th><th>Особенность</th></tr>
+      <tr><td><b>Яндекс.Директ</b></td><td>поисковый запрос (что человек прямо сейчас ищет) +
+        аудитории/ретаргетинг</td><td>основная рабочая площадка для российского рынка, тесно
+        связана с Метрикой</td></tr>
+      <tr><td>Google Ads</td><td>тоже поисковый запрос, структура кампаний почти зеркальная
+        Директу</td><td>сервис фактически недоступен для новых российских рекламодателей с 2022
+        года - сравнение скорее теоретическое, для общего понимания логики</td></tr>
+      <tr><td>Meta Ads (Facebook/Instagram)</td><td>интересы, демография, поведение - не поисковый
+        запрос, а профиль человека</td><td>тоже недоступен для показа в России с 2022 года по тем
+        же причинам</td></tr>
+      <tr><td>Telegram Ads</td><td>тематика и язык канала, где показывается объявление</td>
+        <td>оплата обычно за 1000 показов (CPM), а не за клик; исторически высокий порог входа по
+        бюджету, хотя со временем появлялись более доступные варианты</td></tr>
+      <tr><td>VK Реклама</td><td>интересы и данные профиля, похоже на Meta, но с частью
+        поискового/тематического таргетинга</td><td>активно работает на российском рынке, часто
+        рассматривается как рабочая альтернатива/дополнение к Директу</td></tr>
+    </table>
+    <div class="checklist" style="margin-top:0">
+      <b>Проверь себя.</b> Если в реальной работе понадобится купить рекламу на аудиторию Instagram
+      для российской компании напрямую через официальный кабинет Meta - получится ли это сделать
+      так же просто, как в Директе?
+      <details class="solution" style="margin-top:8px"><summary>Ответ</summary>Нет - официальный
+      доступ к рекламному кабинету Meta для российских рекламодателей закрыт с 2022 года, это не
+      вопрос удобства интерфейса, а вопрос доступности сервиса как такового.</details>
+    </div>
+  </div>
+
+  <div class="step">
+    <h2>Практика: тренажёр запуска кампании</h2>
+    <p class="theory">
+      <b>Как это устроено.</b> Ниже - не настоящий кабинет Директа, а упрощённый тренажёр той же
+      последовательности шагов: цель → гео и время → фразы → текст объявления → бюджет → отправка
+      на модерацию → статистика. Деньги не тратятся, аккаунт не нужен - цель тренажёра в том, чтобы
+      сама последовательность действий стала знакомой ещё до первого захода в настоящий кабинет.
+    </p>
+
+    <div class="sim">
+      <div class="sim-shell">
+        <div class="sim-top"><span>Тренажёр «Директ»</span><span class="step-indicator" id="sim-step-label"></span></div>
+        <div class="sim-body" id="sim-body"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="checklist">
+    <b>Ты готова, если можешь:</b>
+    <ul>
+      <li>объяснить своими словами, что происходит в аукционе, когда человек что-то ищет в Яндексе</li>
+      <li>назвать три уровня структуры кабинета и сказать, зачем каждый нужен</li>
+      <li>объяснить, зачем нужны минус-слова и что такое CTR</li>
+      <li>назвать хотя бы два вида таргетинга кроме ключевых фраз</li>
+      <li>объяснить разницу между ручными ставками и автостратегией - и когда автостратегия может
+        не сработать</li>
+      <li>назвать частую причину отклонения объявления на модерации</li>
+      <li>сказать, чем Директ отличается от Telegram Ads и VK Рекламы по типу таргетинга</li>
+    </ul>
+  </div>
+
+  <div class="done-row"><input type="checkbox" id="done-1"><label for="done-1">Инструкция пройдена</label></div>
+</div>
+
+<script>
+  var slug = 'direkt-dlya-ani';
+  document.querySelectorAll('.done-row input[type="checkbox"]').forEach(function (cb) {
+    var saved = localStorage.getItem(slug + '-' + cb.id);
+    if (saved === 'true') cb.checked = true;
+    cb.addEventListener('change', function () { localStorage.setItem(slug + '-' + cb.id, cb.checked); });
+  });
+
+  /* ---------- тренажёр создания кампании ---------- */
+  (function () {
+    'use strict';
+
+    var ГОРОДА = ['Вся Россия', 'Москва и область', 'Санкт-Петербург и область', 'Казань', 'Екатеринбург', 'Новосибирск'];
+
+    var СОСТОЯНИЕ = {
+      шаг: 1,
+      цель: 'Заявки с сайта',
+      город: ГОРОДА[0],
+      время: 'Круглосуточно',
+      фразы: [],
+      минусСлова: [],
+      заголовок: '',
+      текст: '',
+      ссылка: '',
+      бюджетВДень: 500
+    };
+
+    var тело = document.getElementById('sim-body');
+    var меткаШага = document.getElementById('sim-step-label');
+    var ВСЕГО_ШАГОВ = 6;
+
+    function рендер() {
+      меткаШага.textContent = 'шаг ' + СОСТОЯНИЕ.шаг + ' из ' + ВСЕГО_ШАГОВ;
+      if (СОСТОЯНИЕ.шаг === 1) шагЦель();
+      else if (СОСТОЯНИЕ.шаг === 2) шагТаргетинг();
+      else if (СОСТОЯНИЕ.шаг === 3) шагФразы();
+      else if (СОСТОЯНИЕ.шаг === 4) шагОбъявление();
+      else if (СОСТОЯНИЕ.шаг === 5) шагБюджет();
+      else if (СОСТОЯНИЕ.шаг === 6) шагРезультат();
+    }
+
+    function навигация(html_середина, назадДоступен, впередОбработчик, впередТекст) {
+      var низ = document.createElement('div');
+      низ.className = 'sim-nav';
+      var кнопкаНазад = назадДоступен
+        ? '<button class="sim-btn secondary" id="sim-back">← назад</button>' : '<span></span>';
+      низ.innerHTML = кнопкаНазад + '<button class="sim-btn" id="sim-forward">' + (впередТекст || 'дальше →') + '</button>';
+      тело.appendChild(низ);
+      if (назадДоступен) {
+        document.getElementById('sim-back').onclick = function () { СОСТОЯНИЕ.шаг--; рендер(); };
+      }
+      document.getElementById('sim-forward').onclick = впередОбработчик;
+    }
+
+    function шагЦель() {
+      тело.innerHTML =
+        '<div class="sim-field"><label>Какая цель у кампании?</label>' +
+        '<select id="f-cel">' +
+          ['Заявки с сайта', 'Звонки', 'Переходы на сайт (трафик)', 'Продажи из каталога']
+            .map(function (ц) { return '<option' + (ц === СОСТОЯНИЕ.цель ? ' selected' : '') + '>' + ц + '</option>'; }).join('') +
+        '</select></div>' +
+        '<div class="theory" style="margin-top:0">От выбранной цели дальше зависит, что кабинет вообще предложит настраивать и как будет оптимизировать показы.</div>';
+      навигация(null, false, function () {
+        СОСТОЯНИЕ.цель = document.getElementById('f-cel').value;
+        СОСТОЯНИЕ.шаг = 2; рендер();
+      });
+    }
+
+    function шагТаргетинг() {
+      тело.innerHTML =
+        '<div class="sim-field"><label>Гео показа</label><select id="f-gorod">' +
+          ГОРОДА.map(function (г) { return '<option' + (г === СОСТОЯНИЕ.город ? ' selected' : '') + '>' + г + '</option>'; }).join('') +
+        '</select></div>' +
+        '<div class="sim-field"><label>Время показа</label><select id="f-vremya">' +
+          ['Круглосуточно', 'Только рабочие часы (9:00-19:00)', 'Будни без выходных']
+            .map(function (в) { return '<option' + (в === СОСТОЯНИЕ.время ? ' selected' : '') + '>' + в + '</option>'; }).join('') +
+        '</select></div>';
+      навигация(null, true, function () {
+        СОСТОЯНИЕ.город = document.getElementById('f-gorod').value;
+        СОСТОЯНИЕ.время = document.getElementById('f-vremya').value;
+        СОСТОЯНИЕ.шаг = 3; рендер();
+      });
+    }
+
+    function отрисоватьЧипы(контейнерId, список) {
+      var эл = document.getElementById(контейнерId);
+      эл.innerHTML = список.map(function (слово, i) {
+        return '<span class="sim-chip">' + слово + '<button data-i="' + i + '">×</button></span>';
+      }).join('');
+      Array.prototype.forEach.call(эл.querySelectorAll('button'), function (b) {
+        b.onclick = function () { список.splice(parseInt(b.getAttribute('data-i'), 10), 1); отрисоватьЧипы(контейнерId, список); };
+      });
+    }
+
+    function шагФразы() {
+      тело.innerHTML =
+        '<div class="sim-field"><label>Добавить ключевую фразу и нажать Enter</label>' +
+        '<input id="f-fraza" type="text" placeholder="например: заказать пиццу с доставкой"></div>' +
+        '<div class="sim-chips" id="chips-frazy"></div>' +
+        '<div class="sim-field" style="margin-top:16px"><label>Добавить минус-слово и нажать Enter</label>' +
+        '<input id="f-minus" type="text" placeholder="например: своими руками"></div>' +
+        '<div class="sim-chips" id="chips-minus"></div>';
+      отрисоватьЧипы('chips-frazy', СОСТОЯНИЕ.фразы);
+      отрисоватьЧипы('chips-minus', СОСТОЯНИЕ.минусСлова);
+      document.getElementById('f-fraza').addEventListener('keydown', function (e) {
+        if (e.key === 'Enter' && e.target.value.trim()) {
+          СОСТОЯНИЕ.фразы.push(e.target.value.trim()); e.target.value = '';
+          отрисоватьЧипы('chips-frazy', СОСТОЯНИЕ.фразы);
+        }
+      });
+      document.getElementById('f-minus').addEventListener('keydown', function (e) {
+        if (e.key === 'Enter' && e.target.value.trim()) {
+          СОСТОЯНИЕ.минусСлова.push(e.target.value.trim()); e.target.value = '';
+          отрисоватьЧипы('chips-minus', СОСТОЯНИЕ.минусСлова);
+        }
+      });
+      навигация(null, true, function () {
+        if (СОСТОЯНИЕ.фразы.length === 0) {
+          alert('Добавь хотя бы одну ключевую фразу - без неё объявление некому показывать.');
+          return;
+        }
+        СОСТОЯНИЕ.шаг = 4; рендер();
+      });
+    }
+
+    function обновитьПревью() {
+      var прев = document.getElementById('ad-preview');
+      if (!прев) return;
+      прев.innerHTML =
+        '<div class="yandex-badge">Реклама</div>' +
+        '<div class="title">' + (СОСТОЯНИЕ.заголовок || 'Заголовок объявления') + '</div>' +
+        '<div class="link">' + (СОСТОЯНИЕ.ссылка || 'сайт.рф') + '</div>' +
+        '<div class="text">' + (СОСТОЯНИЕ.текст || 'Текст объявления появится здесь по мере заполнения полей слева.') + '</div>';
+    }
+
+    function шагОбъявление() {
+      тело.innerHTML =
+        '<div class="sim-field"><label>Заголовок (до 56 символов)</label>' +
+        '<input id="f-zagolovok" maxlength="56" value="' + СОСТОЯНИЕ.заголовок + '"></div>' +
+        '<div class="sim-field"><label>Текст объявления (до 81 символа)</label>' +
+        '<textarea id="f-text" maxlength="81">' + СОСТОЯНИЕ.текст + '</textarea></div>' +
+        '<div class="sim-field"><label>Ссылка (как отображается)</label>' +
+        '<input id="f-link" placeholder="сайт.рф" value="' + СОСТОЯНИЕ.ссылка + '"></div>' +
+        '<div class="ad-preview" id="ad-preview"></div>';
+      обновитьПревью();
+      ['f-zagolovok', 'f-text', 'f-link'].forEach(function (id) {
+        document.getElementById(id).addEventListener('input', function () {
+          СОСТОЯНИЕ.заголовок = document.getElementById('f-zagolovok').value;
+          СОСТОЯНИЕ.текст = document.getElementById('f-text').value;
+          СОСТОЯНИЕ.ссылка = document.getElementById('f-link').value;
+          обновитьПревью();
+        });
+      });
+      навигация(null, true, function () {
+        if (!СОСТОЯНИЕ.заголовок.trim() || !СОСТОЯНИЕ.текст.trim()) {
+          alert('Заполни заголовок и текст - без них модерация объявление не примет.');
+          return;
+        }
+        СОСТОЯНИЕ.шаг = 5; рендер();
+      });
+    }
+
+    function шагБюджет() {
+      тело.innerHTML =
+        '<div class="sim-field"><label>Бюджет в день, ₽</label>' +
+        '<input id="f-byudzhet" type="number" min="100" step="50" value="' + СОСТОЯНИЕ.бюджетВДень + '"></div>' +
+        '<div class="theory" style="margin-top:0">В реальном кабинете здесь же выбирается модель оплаты (за клики или автостратегия по конверсиям) - в тренажёре для простоты фиксирована оплата за клик.</div>';
+      навигация(null, true, function () {
+        var знач = parseFloat(document.getElementById('f-byudzhet').value);
+        if (!знач || знач < 100) {
+          alert('Минимально разумный дневной бюджет для тренажёра - 100 ₽.');
+          return;
+        }
+        СОСТОЯНИЕ.бюджетВДень = знач;
+        СОСТОЯНИЕ.шаг = 6; рендер();
+      }, 'отправить на модерацию →');
+    }
+
+    function шагРезультат() {
+      тело.innerHTML = '<div class="theory" style="margin-top:0">Проверяем объявление...</div>';
+      навигация(null, true, function () {}, 'готово');
+      document.getElementById('sim-forward').style.display = 'none';
+      setTimeout(function () {
+        var показы = Math.round(СОСТОЯНИЕ.бюджетВДень / 8 + Math.random() * 40);
+        var ctr = (2 + Math.random() * 4).toFixed(1);
+        var клики = Math.round(показы * ctr / 100);
+        var ценаКлика = клики ? (СОСТОЯНИЕ.бюджетВДень / клики).toFixed(1) : '0';
+        тело.innerHTML =
+          '<div class="checklist" style="margin-top:0"><b>Объявление прошло модерацию.</b> Кампания запущена (учебно) - ниже пример статистики за первый день.</div>' +
+          '<div class="stat-grid">' +
+            '<div class="stat-tile"><div class="val">' + показы + '</div><div class="lbl">показов</div></div>' +
+            '<div class="stat-tile"><div class="val">' + клики + '</div><div class="lbl">кликов</div></div>' +
+            '<div class="stat-tile"><div class="val">' + ctr + '%</div><div class="lbl">CTR</div></div>' +
+            '<div class="stat-tile"><div class="val">' + ценаКлика + ' ₽</div><div class="lbl">цена клика</div></div>' +
+          '</div>' +
+          '<div class="sim-nav"><button class="sim-btn secondary" id="sim-restart">пройти ещё раз с другими настройками</button></div>';
+        document.getElementById('sim-restart').onclick = function () {
+          СОСТОЯНИЕ.шаг = 1; СОСТОЯНИЕ.фразы = []; СОСТОЯНИЕ.минусСлова = [];
+          СОСТОЯНИЕ.заголовок = ''; СОСТОЯНИЕ.текст = ''; СОСТОЯНИЕ.ссылка = '';
+          рендер();
+        };
+      }, 700);
+    }
+
+    рендер();
+  })();
+</script>
+</body>
+</html>
