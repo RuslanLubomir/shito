@@ -1,0 +1,552 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Курсовая работа — имитация клиент-банковского приложения</title>
+<style>
+  :root {
+    --paper: #F4F6F8; --card: #FFFFFF; --ink: #1D2733; --muted: #5D6B7A; --muted-2: #93A1AF;
+    --line: #DCE3EA; --line-soft: #EBEFF3;
+    --accent: #14538A; --accent-ink: #FFFFFF; --accent-bg: #E4EEF7; --accent-line: #B9D3E8;
+    --pos: #1A7F4E; --pos-bg: #E4F3EA; --neg: #B23B3B; --neg-bg: #FBEAEA; --warn: #9A6A16; --warn-bg: #FBF0DA;
+    --radius: 14px; --radius-sm: 9px;
+    --shadow: 0 1px 2px rgba(20,30,40,0.04), 0 8px 22px -10px rgba(20,30,40,0.16);
+    --font-display: Georgia, "Times New Roman", serif;
+    --font-body: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+    --font-mono: ui-monospace, "SF Mono", "Cascadia Code", Consolas, monospace;
+    --space-2: 8px; --space-3: 12px; --space-4: 16px; --space-5: 24px; --space-6: 40px;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--paper); color: var(--ink); font-family: var(--font-body);
+    font-size: 0.95rem; line-height: 1.55; }
+  .wrap { max-width: 900px; margin: 0 auto; padding: var(--space-6) var(--space-4) 100px; }
+
+  /* ---------- титульный лист и пояснительная записка ---------- */
+  .titul { background: var(--card); border: 1px solid var(--line); border-radius: var(--radius);
+    box-shadow: var(--shadow); padding: var(--space-6) var(--space-5); text-align: center;
+    font-family: var(--font-display); margin-bottom: var(--space-6); }
+  .titul .institut { font-size: 1.05rem; margin-bottom: var(--space-5); }
+  .titul .vid-raboty { font-size: 1.5rem; margin: var(--space-6) 0 var(--space-2); }
+  .titul .tema { font-size: 1.15rem; color: var(--accent); margin-bottom: var(--space-6); }
+  .titul .ispolnitel { text-align: left; max-width: 420px; margin: var(--space-6) auto 0; font-family: var(--font-body); }
+  .titul .ispolnitel div { margin-bottom: var(--space-2); }
+  .titul .god { margin-top: var(--space-6); color: var(--muted); font-family: var(--font-body); }
+
+  .section { background: var(--card); border: 1px solid var(--line); border-radius: var(--radius);
+    box-shadow: var(--shadow); padding: var(--space-5); margin-bottom: var(--space-5); }
+  .section h2 { font-family: var(--font-display); font-size: 1.2rem; margin: 0 0 var(--space-3); }
+  .section p { margin: 0 0 var(--space-3); }
+  .section ul { margin: 0 0 var(--space-3); padding-left: var(--space-5); }
+  .section li { margin-bottom: 6px; }
+  .honest-note { background: var(--warn-bg); border-radius: var(--radius-sm); padding: var(--space-3) var(--space-4);
+    font-size: 0.88rem; color: var(--warn); margin-top: var(--space-3); }
+
+  /* ---------- рабочая часть (демонстрация) ---------- */
+  .demo-frame { border: 2px dashed var(--accent-line); border-radius: var(--radius); padding: var(--space-5);
+    background: repeating-linear-gradient(135deg, var(--accent-bg) 0 12px, transparent 12px 24px); }
+  .demo-frame > .app { background: var(--paper); border-radius: var(--radius); overflow: hidden; }
+
+  .app-shell { background: var(--card); border: 1px solid var(--line); border-radius: var(--radius);
+    box-shadow: var(--shadow); overflow: hidden; }
+  .app-top { background: var(--accent); color: var(--accent-ink); padding: var(--space-4) var(--space-5);
+    display: flex; align-items: center; justify-content: space-between; }
+  .app-top .brand { font-weight: 700; letter-spacing: 0.02em; }
+  .app-top .who { font-size: 0.85rem; opacity: 0.9; }
+  .app-top button { background: rgba(255,255,255,0.15); color: var(--accent-ink); border: 1px solid rgba(255,255,255,0.35);
+    border-radius: var(--radius-sm); padding: 6px 12px; font-size: 0.82rem; cursor: pointer; }
+  .app-top button:hover { background: rgba(255,255,255,0.28); }
+  .app-body { padding: var(--space-5); }
+
+  /* логин */
+  .login-box { max-width: 380px; margin: 0 auto; padding: var(--space-6) var(--space-4); }
+  .login-box h3 { margin: 0 0 var(--space-2); font-family: var(--font-display); }
+  .field { margin-bottom: var(--space-3); }
+  .field label { display: block; font-size: 0.82rem; color: var(--muted); margin-bottom: 4px; }
+  .field input, .field select { width: 100%; padding: 10px 12px; border: 1px solid var(--line);
+    border-radius: var(--radius-sm); font-size: 0.95rem; font-family: var(--font-body); background: var(--paper); }
+  .field input:focus, .field select:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-bg); }
+  .btn { display: inline-block; background: var(--accent); color: var(--accent-ink); border: none;
+    border-radius: var(--radius-sm); padding: 10px 18px; font-size: 0.92rem; font-weight: 600; cursor: pointer; }
+  .btn:hover { filter: brightness(1.08); }
+  .btn.secondary { background: var(--accent-bg); color: var(--accent); }
+  .btn.full { width: 100%; }
+  .error-msg { background: var(--neg-bg); color: var(--neg); border-radius: var(--radius-sm); padding: var(--space-3);
+    font-size: 0.88rem; margin-bottom: var(--space-3); }
+  .ok-msg { background: var(--pos-bg); color: var(--pos); border-radius: var(--radius-sm); padding: var(--space-3);
+    font-size: 0.88rem; margin-bottom: var(--space-3); }
+  .hint-users { margin-top: var(--space-4); font-size: 0.82rem; color: var(--muted); background: var(--line-soft);
+    border-radius: var(--radius-sm); padding: var(--space-3); }
+  .hint-users table { width: 100%; border-collapse: collapse; margin-top: 6px; }
+  .hint-users td { padding: 3px 6px; font-family: var(--font-mono); font-size: 0.78rem; }
+
+  /* дашборд */
+  .accounts-grid { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-4); }
+  @media (max-width: 620px) { .accounts-grid { grid-template-columns: 1fr; } }
+  .account-card { border: 1px solid var(--line); border-radius: var(--radius); padding: var(--space-4);
+    cursor: pointer; transition: box-shadow 0.15s; }
+  .account-card:hover { box-shadow: var(--shadow); border-color: var(--accent-line); }
+  .account-card .nazvanie { font-size: 0.85rem; color: var(--muted); margin-bottom: 4px; }
+  .account-card .balans { font-size: 1.5rem; font-weight: 700; margin-bottom: var(--space-3); }
+  .card-visual { background: linear-gradient(135deg, var(--accent), #0B3A63); color: #fff; border-radius: var(--radius-sm);
+    padding: var(--space-3) var(--space-4); font-family: var(--font-mono); }
+  .card-visual .nomer { font-size: 1rem; letter-spacing: 0.08em; margin-bottom: var(--space-2); }
+  .card-visual .nizhnyaya-stroka { display: flex; justify-content: space-between; font-size: 0.7rem; opacity: 0.85; }
+  .reveal-toggle { background: none; border: none; color: var(--accent); font-size: 0.78rem; cursor: pointer;
+    text-decoration: underline; padding: 4px 0; }
+
+  .back-row { margin-bottom: var(--space-4); }
+  .back-row button { background: none; border: none; color: var(--accent); cursor: pointer; font-size: 0.88rem; padding: 0; }
+
+  .history-row { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid var(--line-soft);
+    font-size: 0.88rem; }
+  .history-row:last-child { border-bottom: none; }
+  .history-row .opisanie { color: var(--ink); }
+  .history-row .data { color: var(--muted-2); font-size: 0.78rem; }
+  .history-row .summa.plus { color: var(--pos); font-weight: 600; }
+  .history-row .summa.minus { color: var(--neg); font-weight: 600; }
+
+  .transfer-form { max-width: 460px; }
+  .segment { display: flex; gap: var(--space-2); margin-bottom: var(--space-4); }
+  .segment button { flex: 1; padding: 8px; border: 1px solid var(--line); background: var(--card); border-radius: var(--radius-sm);
+    cursor: pointer; font-size: 0.85rem; }
+  .segment button.active { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+
+  .done-row { display: flex; align-items: center; gap: var(--space-2); margin-top: var(--space-3);
+    padding-top: var(--space-3); border-top: 1px dashed var(--line); font-size: 0.85rem; color: var(--muted); }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="titul">
+    <div class="institut">
+      Радиотехнический институт<br>
+      Кафедра автоматизированных систем специального назначения
+    </div>
+    <div class="vid-raboty">КУРСОВАЯ РАБОТА</div>
+    <div class="tema">«Разработка клиент-банковского приложения<br>с имитацией платёжных операций»</div>
+    <div class="ispolnitel">
+      <div><b>Выполнил:</b> студент 3 курса Масычев Данил</div>
+      <div><b>Специальность:</b> Применение и эксплуатация автоматизированных систем специального назначения</div>
+    </div>
+    <div class="god">2026</div>
+  </div>
+
+  <div class="section">
+    <h2>1. Цель и задачи работы</h2>
+    <p><b>Цель:</b> разработать учебное приложение, имитирующее работу клиент-банка (по образцу
+      мобильных/веб-приложений банков), демонстрирующее основные принципы построения подобных
+      систем: хранение счетов и карт клиента, перевод средств между счетами, ведение истории
+      операций.</p>
+    <p><b>Задачи:</b></p>
+    <ul>
+      <li>спроектировать структуру данных для хранения пользователей, счетов, карт и операций;</li>
+      <li>реализовать генерацию тестовых данных (фамилии, имена, номера карт, начальные балансы);</li>
+      <li>реализовать вход в систему, просмотр счетов и карт, историю операций;</li>
+      <li>реализовать перевод средств между счетами с проверкой достаточности баланса;</li>
+      <li>оформить интерфейс, приближенный по виду к реальным банковским приложениям.</li>
+    </ul>
+  </div>
+
+  <div class="section">
+    <h2>2. Используемые технологии</h2>
+    <p>HTML5, CSS3, JavaScript (ES6). Приложение полностью самодостаточно: не требует установки,
+      сервера или подключения к интернету — открывается одним файлом в любом современном браузере.</p>
+    <div class="honest-note">
+      Честно о реализации: хранение данных выполнено в оперативной памяти браузера (структуры
+      данных JavaScript), а не во внешней базе данных (SQL/файловой) — это сознательное упрощение
+      для демонстрационной версии курсовой работы. Логически структуры данных ниже (пользователи,
+      счета, карты, операции) построены так же, как были бы устроены таблицы в настоящей базе
+      данных, включая связи между ними по идентификаторам.
+    </div>
+  </div>
+
+  <div class="section">
+    <h2>3. Генерация тестовых данных</h2>
+    <p>При каждой загрузке страницы генерируется новый набор из пяти пользователей со случайными
+      русскими фамилиями и именами, у каждого — один или два счёта, к каждому счёту привязана карта.
+      Номер карты — 16 цифр, соответствует контрольному алгоритму Луна (используется в реальных
+      платёжных системах для проверки корректности номера), но начинается с заведомо не выданной
+      комбинации цифр (9999), чтобы номер ни при каких обстоятельствах не совпал с настоящей картой
+      действующей платёжной системы.</p>
+  </div>
+
+  <div class="section">
+    <h2>4. Работающая демонстрация</h2>
+    <p>Ниже — само приложение в рабочем виде. Тестовые логины и пароли показаны на экране входа.</p>
+
+    <div class="demo-frame">
+      <div class="app">
+        <div class="app-shell">
+          <div class="app-top">
+            <div class="brand">▮▮ Демо-Банк</div>
+            <div id="app-top-right"></div>
+          </div>
+          <div class="app-body" id="app-body"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="done-row">Приложение ниже работает полностью на стороне браузера — данные не
+      отправляются никуда за пределы этой страницы.</div>
+  </div>
+
+</div>
+
+<script>
+(function () {
+  'use strict';
+
+  /* ---------- генератор тестовых данных ---------- */
+
+  var ИМЕНА_М = ['Иван', 'Пётр', 'Дмитрий', 'Сергей', 'Андрей', 'Николай', 'Алексей'];
+  var ИМЕНА_Ж = ['Мария', 'Анна', 'Ольга', 'Екатерина', 'Наталья', 'Светлана'];
+  var ФАМИЛИИ_М = ['Иванов', 'Смирнов', 'Кузнецов', 'Попов', 'Соколов', 'Волков', 'Морозов'];
+  var ФАМИЛИИ_Ж = ['Иванова', 'Смирнова', 'Кузнецова', 'Попова', 'Соколова', 'Волкова', 'Морозова'];
+  var ОПИСАНИЯ_ОПЕРАЦИЙ = ['Оплата покупок', 'Перевод от друга', 'Пополнение счёта', 'Оплата услуг связи',
+    'Перевод между своими счетами', 'Возврат средств', 'Оплата подписки'];
+
+  function случайноеИз(список) {
+    return список[Math.floor(Math.random() * список.length)];
+  }
+
+  function случайноеЧисло(мин, макс) {
+    return мин + Math.floor(Math.random() * (макс - мин + 1));
+  }
+
+  // Контрольная цифра по алгоритму Луна - тот же способ, которым реальные
+  // платёжные системы проверяют, что номер карты не опечатан.
+  function цифраЛуна(без_последней_цифры) {
+    var сумма = 0;
+    var удвоить = true;
+    for (var i = без_последней_цифры.length - 1; i >= 0; i--) {
+      var цифра = parseInt(без_последней_цифры[i], 10);
+      if (удвоить) {
+        цифра *= 2;
+        if (цифра > 9) цифра -= 9;
+      }
+      сумма += цифра;
+      удвоить = !удвоить;
+    }
+    return (10 - (сумма % 10)) % 10;
+  }
+
+  function сгенерироватьНомерКарты() {
+    // Префикс 9999 - заведомо не выданная комбинация, ни одна настоящая
+    // платёжная система такие номера не использует.
+    var тело = '9999';
+    for (var i = 0; i < 11; i++) тело += случайноеЧисло(0, 9);
+    return тело + цифраЛуна(тело);
+  }
+
+  function форматНомераКарты(номер, скрыть) {
+    if (скрыть) {
+      return '•••• •••• •••• ' + номер.slice(-4);
+    }
+    return номер.replace(/(\d{4})(?=\d)/g, '$1 ');
+  }
+
+  function сгенерироватьПользователя(id) {
+    var женский = Math.random() < 0.5;
+    var имя = женский ? случайноеИз(ИМЕНА_Ж) : случайноеИз(ИМЕНА_М);
+    var фамилия = женский ? случайноеИз(ФАМИЛИИ_Ж) : случайноеИз(ФАМИЛИИ_М);
+    var логин = (фамилия + имя).toLowerCase()
+      .replace(/[а-я]/g, function (буква) {
+        var карта = { 'а': 'a', 'б': 'b', 'в': 'v', 'г': 'g', 'д': 'd', 'е': 'e', 'ж': 'zh', 'з': 'z',
+          'и': 'i', 'й': 'y', 'к': 'k', 'л': 'l', 'м': 'm', 'н': 'n', 'о': 'o', 'п': 'p', 'р': 'r',
+          'с': 's', 'т': 't', 'у': 'u', 'ф': 'f', 'х': 'h', 'ц': 'c', 'ч': 'ch', 'ш': 'sh', 'щ': 'sch',
+          'ъ': '', 'ы': 'y', 'ь': '', 'э': 'e', 'ю': 'yu', 'я': 'ya', 'ё': 'e' };
+        return (буква in карта) ? карта[буква] : буква;
+      }) + id;
+    return {
+      id: id, имя: имя, фамилия: фамилия, логин: логин, пароль: 'demo' + id, счета: []
+    };
+  }
+
+  function сгенерироватьБазу() {
+    var пользователи = [];
+    var следующийIdСчёта = 1;
+    var следующийIdОперации = 1;
+    var операции = [];
+
+    for (var i = 1; i <= 5; i++) {
+      var пользователь = сгенерироватьПользователя(i);
+      var числоСчетов = случайноеЧисло(1, 2);
+      for (var s = 0; s < числоСчетов; s++) {
+        var счёт = {
+          id: следующийIdСчёта++,
+          название: s === 0 ? 'Основной счёт' : 'Накопительный счёт',
+          баланс: случайноеЧисло(500, 250000),
+          номерКарты: сгенерироватьНомерКарты(),
+          скрытКомер: true
+        };
+        пользователь.счета.push(счёт);
+        // немного истории для реалистичности
+        var числоОпераций = случайноеЧисло(2, 5);
+        for (var h = 0; h < числоОпераций; h++) {
+          var плюс = Math.random() < 0.5;
+          var сумма = случайноеЧисло(100, 15000);
+          операции.push({
+            id: следующийIdОперации++,
+            счётId: счёт.id,
+            описание: случайноеИз(ОПИСАНИЯ_ОПЕРАЦИЙ),
+            сумма: плюс ? сумма : -сумма,
+            дата: новаяДата(случайноеЧисло(1, 30))
+          });
+        }
+      }
+      пользователи.push(пользователь);
+    }
+    return { пользователи: пользователи, операции: операции, следующийIdОперации: следующийIdОперации };
+  }
+
+  function новаяДата(днейНазад) {
+    var д = new Date();
+    д.setDate(д.getDate() - днейНазад);
+    return д.toLocaleDateString('ru-RU') + ' ' + д.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
+  }
+
+  /* ---------- состояние приложения ---------- */
+
+  var БАЗА = сгенерироватьБазу();
+  var СОСТОЯНИЕ = { пользователь: null, экран: 'вход', выбранныйСчёт: null, ошибка: '' };
+
+  function найтиСчётПоКарте(номерКарты) {
+    for (var i = 0; i < БАЗА.пользователи.length; i++) {
+      var п = БАЗА.пользователи[i];
+      for (var j = 0; j < п.счета.length; j++) {
+        if (п.счета[j].номерКарты === номерКарты) return { пользователь: п, счёт: п.счета[j] };
+      }
+    }
+    return null;
+  }
+
+  function историяСчёта(счётId) {
+    return БАЗА.операции.filter(function (о) { return о.счётId === счётId; })
+      .sort(function (a, b) { return b.id - a.id; });
+  }
+
+  /* ---------- отрисовка ---------- */
+
+  var тело = document.getElementById('app-body');
+  var верхПравый = document.getElementById('app-top-right');
+
+  function экранВхода() {
+    верхПравый.innerHTML = '';
+    var ошибкаHtml = СОСТОЯНИЕ.ошибка
+      ? '<div class="error-msg">' + СОСТОЯНИЕ.ошибка + '</div>' : '';
+    var подсказки = БАЗА.пользователи.map(function (п) {
+      return '<tr><td>' + п.логин + '</td><td>' + п.пароль + '</td><td>' + п.имя + ' ' + п.фамилия + '</td></tr>';
+    }).join('');
+    тело.innerHTML =
+      '<div class="login-box">' +
+        '<h3>Вход в приложение</h3>' +
+        ошибкаHtml +
+        '<div class="field"><label>Логин</label><input id="in-login" type="text" autocomplete="off"></div>' +
+        '<div class="field"><label>Пароль</label><input id="in-password" type="password" autocomplete="off"></div>' +
+        '<button class="btn full" id="btn-login">Войти</button>' +
+        '<div class="hint-users">Тестовые учётные записи (сгенерированы заново при загрузке страницы):' +
+          '<table><tr><td><b>логин</b></td><td><b>пароль</b></td><td><b>кто</b></td></tr>' + подсказки + '</table>' +
+        '</div>' +
+      '</div>';
+    document.getElementById('btn-login').onclick = обработатьВход;
+    document.getElementById('in-password').addEventListener('keydown', function (e) {
+      if (e.key === 'Enter') обработатьВход();
+    });
+  }
+
+  function обработатьВход() {
+    var логин = document.getElementById('in-login').value.trim();
+    var пароль = document.getElementById('in-password').value;
+    var найден = БАЗА.пользователи.filter(function (п) { return п.логин === логин && п.пароль === пароль; })[0];
+    if (!найден) {
+      СОСТОЯНИЕ.ошибка = 'Неверный логин или пароль.';
+      экранВхода();
+      return;
+    }
+    СОСТОЯНИЕ.ошибка = '';
+    СОСТОЯНИЕ.пользователь = найден;
+    СОСТОЯНИЕ.экран = 'дашборд';
+    отрисовать();
+  }
+
+  function выйти() {
+    СОСТОЯНИЕ.пользователь = null;
+    СОСТОЯНИЕ.экран = 'вход';
+    СОСТОЯНИЕ.выбранныйСчёт = null;
+    отрисовать();
+  }
+
+  function экранДашборда() {
+    var п = СОСТОЯНИЕ.пользователь;
+    верхПравый.innerHTML = '<span class="who">' + п.имя + ' ' + п.фамилия + '</span> ' +
+      '<button id="btn-logout" style="margin-left:12px">Выйти</button>';
+    var карточки = п.счета.map(function (счёт) {
+      return '<div class="account-card" data-id="' + счёт.id + '">' +
+        '<div class="nazvanie">' + счёт.название + '</div>' +
+        '<div class="balans">' + счёт.баланс.toLocaleString('ru-RU') + ' ₽</div>' +
+        '<div class="card-visual"><div class="nomer">' + форматНомераКарты(счёт.номерКарты, true) + '</div>' +
+        '<div class="nizhnyaya-stroka"><span>ДЕМО-БАНК</span><span>' + п.имя.toUpperCase() + '</span></div></div>' +
+      '</div>';
+    }).join('');
+    тело.innerHTML =
+      '<h3 style="margin-top:0">Мои счета</h3>' +
+      '<div class="accounts-grid">' + карточки + '</div>' +
+      '<div style="margin-top:20px"><button class="btn secondary" id="btn-transfer">Перевести средства</button></div>';
+    document.getElementById('btn-logout').onclick = выйти;
+    document.getElementById('btn-transfer').onclick = function () {
+      СОСТОЯНИЕ.экран = 'перевод'; отрисовать();
+    };
+    Array.prototype.forEach.call(document.querySelectorAll('.account-card'), function (эл) {
+      эл.onclick = function () {
+        СОСТОЯНИЕ.выбранныйСчёт = parseInt(эл.getAttribute('data-id'), 10);
+        СОСТОЯНИЕ.экран = 'счёт';
+        отрисовать();
+      };
+    });
+  }
+
+  function экранСчёта() {
+    var п = СОСТОЯНИЕ.пользователь;
+    var счёт = п.счета.filter(function (с) { return с.id === СОСТОЯНИЕ.выбранныйСчёт; })[0];
+    верхПравый.innerHTML = '<span class="who">' + п.имя + ' ' + п.фамилия + '</span> ' +
+      '<button id="btn-logout" style="margin-left:12px">Выйти</button>';
+    var операции = историяСчёта(счёт.id);
+    var строкиИстории = операции.length
+      ? операции.map(function (о) {
+          var класс = о.сумма >= 0 ? 'plus' : 'minus';
+          var знак = о.сумма >= 0 ? '+' : '';
+          return '<div class="history-row"><div><div class="opisanie">' + о.описание + '</div>' +
+            '<div class="data">' + о.дата + '</div></div>' +
+            '<div class="summa ' + класс + '">' + знак + о.сумма.toLocaleString('ru-RU') + ' ₽</div></div>';
+        }).join('')
+      : '<p style="color:var(--muted)">Операций пока нет.</p>';
+    тело.innerHTML =
+      '<div class="back-row"><button id="btn-back">← ко всем счетам</button></div>' +
+      '<h3 style="margin-top:0">' + счёт.название + '</h3>' +
+      '<div class="balans" style="font-size:1.8rem;margin-bottom:12px">' + счёт.баланс.toLocaleString('ru-RU') + ' ₽</div>' +
+      '<div class="card-visual" style="max-width:340px;margin-bottom:16px">' +
+        '<div class="nomer" id="nomer-karty">' + форматНомераКарты(счёт.номерКарты, true) + '</div>' +
+        '<div class="nizhnyaya-stroka"><span>ДЕМО-БАНК</span><span>' + п.имя.toUpperCase() + '</span></div>' +
+      '</div>' +
+      '<button class="reveal-toggle" id="btn-reveal">показать полный номер</button>' +
+      '<h3>История операций</h3>' +
+      строкиИстории;
+    document.getElementById('btn-back').onclick = function () {
+      СОСТОЯНИЕ.экран = 'дашборд'; отрисовать();
+    };
+    document.getElementById('btn-logout').onclick = выйти;
+
+    var показано = false;
+    document.getElementById('btn-reveal').onclick = function () {
+      показано = !показано;
+      document.getElementById('nomer-karty').textContent = форматНомераКарты(счёт.номерКарты, !показано);
+      document.getElementById('btn-reveal').textContent = показано ? 'скрыть номер' : 'показать полный номер';
+    };
+  }
+
+  function экранПеревода() {
+    var п = СОСТОЯНИЕ.пользователь;
+    верхПравый.innerHTML = '<span class="who">' + п.имя + ' ' + п.фамилия + '</span> ' +
+      '<button id="btn-logout" style="margin-left:12px">Выйти</button>';
+    var опцииСчетов = п.счета.map(function (с) {
+      return '<option value="' + с.id + '">' + с.название + ' (' + с.баланс.toLocaleString('ru-RU') + ' ₽)</option>';
+    }).join('');
+    тело.innerHTML =
+      '<div class="back-row"><button id="btn-back">← к счетам</button></div>' +
+      '<h3 style="margin-top:0">Перевод средств</h3>' +
+      '<div class="transfer-form">' +
+        '<div class="field"><label>Счёт списания</label><select id="tf-from">' + опцииСчетов + '</select></div>' +
+        '<div class="field"><label>Куда переводим</label>' +
+          '<select id="tf-type"><option value="свой">На свой другой счёт</option>' +
+          '<option value="карта">По номеру карты (другому клиенту)</option></select></div>' +
+        '<div id="tf-target-block"></div>' +
+        '<div class="field"><label>Сумма, ₽</label><input id="tf-summa" type="number" min="1"></div>' +
+        '<div id="tf-message"></div>' +
+        '<button class="btn full" id="btn-do-transfer">Перевести</button>' +
+      '</div>';
+    document.getElementById('btn-back').onclick = function () { СОСТОЯНИЕ.экран = 'дашборд'; отрисовать(); };
+    document.getElementById('btn-logout').onclick = выйти;
+
+    function перерисоватьЦель() {
+      var тип = document.getElementById('tf-type').value;
+      var блок = document.getElementById('tf-target-block');
+      if (тип === 'свой') {
+        var опции = п.счета.map(function (с) {
+          return '<option value="' + с.id + '">' + с.название + '</option>';
+        }).join('');
+        блок.innerHTML = '<div class="field"><label>Счёт зачисления</label><select id="tf-to-account">' + опции + '</select></div>';
+      } else {
+        блок.innerHTML = '<div class="field"><label>Номер карты получателя</label>' +
+          '<input id="tf-to-card" type="text" placeholder="9999 XXXX XXXX XXXX" maxlength="19"></div>';
+      }
+    }
+    document.getElementById('tf-type').onchange = перерисоватьЦель;
+    перерисоватьЦель();
+
+    document.getElementById('btn-do-transfer').onclick = function () {
+      выполнитьПеревод(п);
+    };
+  }
+
+  function выполнитьПеревод(п) {
+    var idОт = parseInt(document.getElementById('tf-from').value, 10);
+    var счётОт = п.счета.filter(function (с) { return с.id === idОт; })[0];
+    var тип = document.getElementById('tf-type').value;
+    var сумма = parseFloat(document.getElementById('tf-summa').value);
+    var сообщение = document.getElementById('tf-message');
+
+    if (!сумма || сумма <= 0) {
+      сообщение.innerHTML = '<div class="error-msg">Укажи сумму больше нуля.</div>';
+      return;
+    }
+    if (сумма > счётОт.баланс) {
+      сообщение.innerHTML = '<div class="error-msg">Недостаточно средств на счёте списания.</div>';
+      return;
+    }
+
+    var счётКуда, получательИмя;
+    if (тип === 'свой') {
+      var idКуда = parseInt(document.getElementById('tf-to-account').value, 10);
+      if (idКуда === idОт) {
+        сообщение.innerHTML = '<div class="error-msg">Нельзя перевести на тот же счёт.</div>';
+        return;
+      }
+      счётКуда = п.счета.filter(function (с) { return с.id === idКуда; })[0];
+      получательИмя = 'себе (' + счётКуда.название + ')';
+    } else {
+      var номерКарты = document.getElementById('tf-to-card').value.replace(/\s+/g, '');
+      var найдено = найтиСчётПоКарте(номерКарты);
+      if (!найдено) {
+        сообщение.innerHTML = '<div class="error-msg">Карта с таким номером не найдена среди тестовых пользователей.</div>';
+        return;
+      }
+      счётКуда = найдено.счёт;
+      получательИмя = найдено.пользователь.имя + ' ' + найдено.пользователь.фамилия;
+    }
+
+    счётОт.баланс -= сумма;
+    счётКуда.баланс += сумма;
+    var сейчас = новаяДата(0);
+    БАЗА.операции.push({ id: БАЗА.следующийIdОперации++, счётId: счётОт.id,
+      описание: 'Перевод: ' + получательИмя, сумма: -сумма, дата: сейчас });
+    БАЗА.операции.push({ id: БАЗА.следующийIdОперации++, счётId: счётКуда.id,
+      описание: 'Перевод от ' + п.имя + ' ' + п.фамилия, сумма: сумма, дата: сейчас });
+
+    сообщение.innerHTML = '<div class="ok-msg">Перевод выполнен: ' + сумма.toLocaleString('ru-RU') + ' ₽.</div>';
+    document.getElementById('tf-summa').value = '';
+  }
+
+  function отрисовать() {
+    if (СОСТОЯНИЕ.экран === 'вход') экранВхода();
+    else if (СОСТОЯНИЕ.экран === 'дашборд') экранДашборда();
+    else if (СОСТОЯНИЕ.экран === 'счёт') экранСчёта();
+    else if (СОСТОЯНИЕ.экран === 'перевод') экранПеревода();
+  }
+
+  отрисовать();
+})();
+</script>
+</body>
+</html>
