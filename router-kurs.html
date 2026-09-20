@@ -1,0 +1,481 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Курс про роутер (черновик, имя не выбрано)</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>📡</text></svg>">
+<style>
+  :root {
+    --paper: #FFFFFF; --canvas: #FFFFFF; --raised: #FFFFFF;
+    --ink: #2B2B2B; --muted: #737373; --muted-2: #A3A3A3;
+    --line: #E4E4E4; --line-soft: #F0F0F0;
+    --accent: #5C5C5C; --accent-bg: #ECECEC; --accent-line: #C6C6C6;
+    --pos: #1A7F4E; --pos-bg: #E4F3EA;
+    --shadow-sm: 0 1px 2px rgba(24,32,22,0.04);
+    --shadow: 0 1px 2px rgba(24,32,22,0.04), 0 8px 22px -10px rgba(24,32,22,0.12);
+    --radius: 14px; --radius-sm: 9px;
+    --font-display: ui-serif, "Iowan Old Style", "Palatino Linotype", Georgia, "Times New Roman", serif;
+    --font-body: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", "Helvetica Neue", Roboto, Arial, sans-serif;
+    --font-mono: ui-monospace, "SF Mono", "Cascadia Code", "Roboto Mono", Consolas, monospace;
+    --space-1: 4px; --space-2: 8px; --space-3: 12px; --space-4: 16px; --space-5: 24px;
+    --text-xs: 0.75rem; --text-sm: 0.83rem; --text-base: 0.95rem; --text-lg: 1.1rem; --text-display: 2.1rem;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--canvas); color: var(--ink); font-family: var(--font-body);
+    font-size: var(--text-base); line-height: 1.55; -webkit-font-smoothing: antialiased; }
+  .wrap { max-width: 760px; margin: 0 auto; padding: var(--space-5) var(--space-4) 80px; }
+  h1, h2, h3 { font-family: var(--font-display); font-weight: 600; margin: 0 0 var(--space-2); }
+  h1 { font-size: var(--text-display); }
+  h2 { font-size: var(--text-lg); }
+  .intro { color: var(--muted); margin: var(--space-4) 0; }
+  .hero { background: var(--raised); border: 1px solid var(--line); border-radius: var(--radius);
+    padding: var(--space-4); margin: var(--space-4) 0; box-shadow: var(--shadow-sm); }
+  .progress-outer { background: var(--line-soft); border-radius: 999px; height: 10px; overflow: hidden; }
+  .progress-inner { background: var(--pos); height: 100%; width: 0%; transition: width .3s; }
+  .progress-label { font-size: var(--text-xs); color: var(--muted); margin-top: var(--space-1); }
+  .chapter { background: var(--raised); border: 1px solid var(--line); border-radius: var(--radius);
+    padding: var(--space-5); margin: var(--space-5) 0; box-shadow: var(--shadow); }
+  .chapter-num { font-size: var(--text-xs); color: var(--muted-2); text-transform: uppercase; letter-spacing: .05em; }
+  .theory { background: var(--accent-bg); border-radius: var(--radius-sm); padding: var(--space-3) var(--space-4);
+    font-size: var(--text-sm); margin: var(--space-3) 0; }
+  .theory b { color: var(--ink); }
+  .pedagogy { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-3); margin: var(--space-4) 0; }
+  @media (max-width: 560px) { .pedagogy { grid-template-columns: 1fr; } }
+  .pedagogy .card { background: var(--raised); border: 1px solid var(--line); border-radius: var(--radius-sm);
+    padding: var(--space-3); font-size: var(--text-sm); }
+  .pedagogy .card strong { display: block; margin-bottom: 4px; }
+  .finding { border-left: 3px solid var(--accent); padding: var(--space-2) var(--space-4); margin: var(--space-4) 0; }
+  .finding .src { font-size: var(--text-xs); color: var(--muted-2); }
+  pre.code-block { background: var(--ink); color: #EDEDED; padding: var(--space-4); border-radius: var(--radius-sm);
+    font-family: var(--font-mono); font-size: var(--text-sm); white-space: pre-wrap; overflow-x: auto; margin: var(--space-3) 0; }
+
+  /* тренажёр-эмулятор терминала — честно помечен, не настоящий терминал */
+  .fake-terminal { background: #1b1b1b; border-radius: var(--radius-sm); padding: var(--space-4);
+    font-family: var(--font-mono); font-size: var(--text-sm); color: #d8d8d8; margin: var(--space-3) 0; }
+  .fake-terminal .note { color: #8a8a8a; font-family: var(--font-body); font-size: var(--text-xs);
+    margin-bottom: var(--space-2); }
+  .fake-terminal .output { white-space: pre-wrap; margin: var(--space-2) 0; min-height: 1.2em; }
+  .fake-terminal .prompt-row { display: flex; align-items: center; gap: var(--space-1); }
+  .fake-terminal .prompt-row span.sym { color: #6fcf6f; }
+  .fake-terminal input { background: transparent; border: none; color: #fff; font-family: var(--font-mono);
+    font-size: var(--text-sm); flex: 1; outline: none; }
+  .fake-terminal .hintline { color: #c99a3a; font-size: var(--text-xs); margin-top: var(--space-1); }
+
+  .quest { border-left: 3px solid var(--accent); padding: var(--space-2) var(--space-4); margin: var(--space-4) 0; }
+  .hint-row { margin: var(--space-3) 0; }
+  details.hint, details.solution { border: 1px solid var(--line); border-radius: var(--radius-sm);
+    padding: var(--space-2) var(--space-3); margin-bottom: var(--space-2); font-size: var(--text-sm); }
+  details.solution summary { color: var(--pos); font-weight: 600; }
+  .effect { background: var(--pos-bg); border-radius: var(--radius-sm); padding: var(--space-4);
+    margin-top: var(--space-4); font-size: var(--text-sm); }
+  .done-row { display: flex; align-items: center; gap: var(--space-2); margin-top: var(--space-4);
+    padding-top: var(--space-3); border-top: 1px dashed var(--line); }
+  .screenshot-slot { border: 1px dashed var(--line); border-radius: var(--radius-sm); padding: var(--space-4);
+    color: var(--muted-2); font-size: var(--text-xs); text-align: center; margin: var(--space-3) 0; }
+  footer.note { text-align: center; color: var(--muted-2); font-size: var(--text-xs); margin-top: var(--space-5); }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="hero">
+    <h1>Курс про роутер (рабочее название не выбрано)</h1>
+    <p class="intro">Как настроить свой роутер под OpenWrt с нуля — и заодно понять, что такое сеть,
+      туннель и DNS не по абстрактным схемам, а по реальному прохождению с настоящими ошибками.
+      Без вымышленного сюжета — это мануал, который читается как курс, не наоборот.</p>
+    <div class="progress-outer"><div class="progress-inner" id="progress-bar"></div></div>
+    <p class="progress-label" id="progress-label">0 из 5 глав пройдено</p>
+  </div>
+
+  <div class="theory">
+    <b>Про тренажёры внутри.</b> Тёмные блоки с приглашением <code>$</code> — не настоящий терминал,
+    он никуда не подключён. Это тренажёр: вводишь ту же команду, что реально вводилась в этой истории,
+    и видишь упрощённый, но честный по смыслу ответ — не дословную распечатку терминала (реальные
+    команды часто вообще ничего не печатают или печатают гораздо больше технических деталей), а то,
+    что на самом деле произошло и что тебе важно увидеть.
+  </div>
+
+  <div class="theory">
+    <b>Честно про границы курса.</b> Курс начинается с уже прошитого роутера на OpenWrt, до которого
+    можно достучаться. Сама прошивка (превращение заводской программы в OpenWrt) — отдельная, более
+    рискованная тема: неправильный файл может "закирпичить" роутер, то есть превратить его в
+    бесполезный кусок пластика. Этот курс её не покрывает — только то, что происходит после.
+  </div>
+
+  <div class="pedagogy">
+    <div class="card"><strong>Советская школа (Выготский, Гальперин)</strong>Сначала показываем готовое действие целиком, потом по шагам, и только потом — сам.</div>
+    <div class="card"><strong>Свеллер, worked example effect</strong>Перед заданием — всегда сначала разобранный настоящий пример, не наоборот.</div>
+    <div class="card"><strong>Западная когнитивная наука (Родигер, Карпике, Эрикссон)</strong>Ввести команду самому закрепляет сильнее, чем просто прочитать про неё.</div>
+    <div class="card"><strong>Японская школа (метод Кумон)</strong>Готовое решение открыто рядом — сверить с собой можно всегда, это не списывание.</div>
+    <div class="card"><strong>Блум, mastery learning</strong>Не двигаться к следующей главе, пока не закрыл текущую.</div>
+  </div>
+
+  <!-- ==================== Глава 1 ==================== -->
+  <div class="chapter">
+    <span class="chapter-num">Глава 1</span>
+    <h2>Что вообще такое роутер и прошивка</h2>
+    <p class="theory">
+      <b>Теория, с самого начала.</b> Роутер - это маленький компьютер дома, через который проходит
+      весь интернет: от провода (или оптики) в стене до телефона и ноутбука по Wi-Fi. Внутри у него,
+      как у любого компьютера, есть своя программа, которая всем управляет - она называется прошивка.
+      Обычно эту программу поставил завод, она закрытая - не видно, что внутри, и менять нельзя.
+      OpenWrt - открытая прошивка: то же самое железо, но программа видна и настраивается гораздо
+      гибче. Гнаться нужно не за самой свежей версией, а за той, под которую точно собраны нужные
+      дополнительные программы (о них - дальше).
+    </p>
+
+    <div class="finding">
+      <b>Реальная находка.</b> Файл прошивки был датирован маем 2025 и выглядел устаревшим -
+      ночь ушла на поиски "более свежего". Оказалось, дата ничего не говорит о поддержке
+      нового чипа - смотреть надо содержимое файла.
+      <div class="src">источник: 00-OPIS-I-NAHODKI.md, находка 1</div>
+    </div>
+
+    <div class="fake-terminal" data-terminal="ch1">
+      <div class="note">тренажёр - попробуй ввести команду проверки чипа в файле прошивки</div>
+      <div class="output"></div>
+      <div class="prompt-row"><span class="sym">$</span><input type="text" placeholder="введи команду..."></div>
+      <div class="hintline" hidden></div>
+    </div>
+
+    <div class="quest">
+      <b>Задание.</b> Введи в тренажёре: <code>strings cudy_tr3000-256mb-v1-sysupgrade.bin | grep -i F50L1G41</code>
+      - и посмотри, что реально ответил файл.
+    </div>
+    <div class="hint-row">
+      <details class="hint"><summary>Подсказка 1</summary>Команда ищет строку с названием чипа прямо внутри бинарного файла прошивки, без распаковки.</details>
+      <details class="hint"><summary>Подсказка 2</summary>Если чип в списке поддерживаемых - дата сборки файла не имеет значения.</details>
+      <details class="solution"><summary>Показать разбор</summary>Файл содержит список supported_devices, и cudy,tr3000-256mb-v1 с чипом F50L1G41LC там был с самого начала - просто дата в имени файла об этом не говорит.</details>
+    </div>
+
+    <div class="finding">
+      <b>Ещё находка.</b> Заводской адрес роутера - <b>192.168.10.1</b>, а не 192.168.1.1 (тот появится
+      только после перепрошивки). Адрес напечатан на наклейке снизу. Полчаса ушло на ERR_ADDRESS_UNREACHABLE,
+      пока не посмотрели наклейку.
+      <div class="src">источник: 00-OPIS-I-NAHODKI.md, находка 2</div>
+    </div>
+    <div class="screenshot-slot">[сюда позже - фото наклейки с адресом, 01-pokupka/08-naklejka...]</div>
+
+    <div class="finding">
+      <b>И ещё.</b> Финальную прошивку нужно брать из ветки 24.10, не 25.12 (та новее, но под неё может
+      не быть собрано нужных пакетов).
+      <div class="src">источник: 00-OPIS-I-NAHODKI.md, находка 3</div>
+    </div>
+
+    <div class="effect">
+      Три этих находки вместе экономят примерно ночь блужданий - именно столько реально ушло
+      на них в первый раз, до того, как способ проверки был найден.
+    </div>
+    <div class="done-row"><input type="checkbox" id="done-1"><label for="done-1">Глава пройдена</label></div>
+  </div>
+
+  <!-- ==================== Глава 2 ==================== -->
+  <div class="chapter">
+    <span class="chapter-num">Глава 2</span>
+    <h2>Локальная сеть у тебя дома</h2>
+    <p class="theory">
+      <b>Теория, с аналогией.</b> У каждого устройства в сети - у телефона, ноутбука, самого роутера -
+      есть свой номер, IP-адрес, как номер квартиры в доме. Группа адресов, которая считается "одним
+      домом" - это подсеть: устройства внутри неё видят друг друга напрямую, а с соседним домом
+      общаются только через дверь подъезда - роутер. Раздачей номеров новым устройствам занимается
+      служба DHCP - как консьерж, который сам выдаёт свободную квартиру новому жильцу. Сам роутер -
+      это и есть тот самый перекрёсток, через который идёт вообще всё: и связь между твоими
+      устройствами, и выход в интернет наружу. Запись вида <code>192.168.1.0/24</code> означает
+      "дом" из 256 возможных квартир (адресов) - число после слэша просто задаёт размер дома,
+      запоминать его формулу не обязательно.
+    </p>
+
+    <div class="finding">
+      <b>Реальная находка.</b> Роутер провайдера (МГТС) раздаёт подсеть 192.168.1.0/24. OpenWrt по
+      умолчанию - тоже. Два роутера подряд с одинаковой подсетью не понимают, куда слать пакеты -
+      интернета нет, хотя WAN получил адрес.
+      <div class="src">источник: 00-OPIS-I-NAHODKI.md, находка 6</div>
+    </div>
+
+    <div class="finding">
+      <b>Важный нюанс.</b> В этом случае через обычный веб-интерфейс поменять адрес не получилось -
+      LuCI ждёт подтверждения 90 секунд, а связь на новом адресе не успевает установиться, и настройка
+      откатывается сама. Сработал терминал.
+    </div>
+
+    <div class="fake-terminal" data-terminal="ch2">
+      <div class="note">тренажёр - смени подсеть роутера командами</div>
+      <div class="output"></div>
+      <div class="prompt-row"><span class="sym">$</span><input type="text" placeholder="введи команду..."></div>
+      <div class="hintline" hidden></div>
+    </div>
+
+    <div class="quest">
+      <b>Задание.</b> Введи по очереди: <code>uci set network.lan.ipaddr='192.168.5.1'</code>,
+      затем <code>uci commit network</code>, затем <code>/etc/init.d/network restart</code>.
+    </div>
+    <div class="hint-row">
+      <details class="hint"><summary>Подсказка 1</summary>Три команды идут строго по порядку - каждая следующая зависит от предыдущей.</details>
+      <details class="hint"><summary>Подсказка 2</summary>uci commit пишет на диск сразу - отката, как в веб-интерфейсе, здесь нет.</details>
+      <details class="solution"><summary>Показать разбор</summary>Первая команда меняет настройку в памяти, вторая - сохраняет её на диск, третья - применяет, перезапустив сетевую службу. Без третьей команды роутер продолжит работать по-старому до перезагрузки.</details>
+    </div>
+    <div class="theory">
+      <b>Важно на живом роутере (не в тренажёре).</b> В момент выполнения третьей команды связь с
+      роутером оборвётся - твой компьютер ещё "думает", что роутер на старом адресе. Это ожидаемо,
+      не поломка: нужно вручную зайти по новому адресу (в этом случае - 192.168.5.1) или подождать,
+      пока Wi-Fi/сеть переподключится сама.
+    </div>
+
+    <div class="finding">
+      <b>Отдельная находка.</b> После смены подсети DNS от терминала МГТС перестал отвечать, хотя
+      пинг проходил. Связь и DNS - разные слои, одно не гарантирует другое. Лечится явным указанием
+      DNS-серверов.
+      <div class="src">источник: 00-OPIS-I-NAHODKI.md, находка 7</div>
+    </div>
+
+    <div class="effect">
+      Без этой главы каскадное подключение (а это обычная ситуация с оптикой) просто не заработает -
+      не потому что что-то сломано, а потому что два роутера буквально спорят за одну и ту же подсеть.
+    </div>
+    <div class="done-row"><input type="checkbox" id="done-2"><label for="done-2">Глава пройдена</label></div>
+  </div>
+
+  <!-- ==================== Глава 3 ==================== -->
+  <div class="chapter">
+    <span class="chapter-num">Глава 3</span>
+    <h2>Свой сервер за границей и туннель</h2>
+    <p class="theory">
+      <b>Теория, с нуля.</b> VPS - это компьютер, который стоит не у тебя дома, а в дата-центре в
+      другой стране, и ты его просто арендуешь за деньги в месяц, как квартиру. Туннель - защищённый,
+      зашифрованный путь между твоим роутером и этим арендованным компьютером: трафик идёт по нему,
+      как по трубе, снаружи которой не видно, что внутри. Обычный туннель (протокол WireGuard) уже
+      неплохо прячет содержимое, но сам факт "здесь идёт туннель" иногда можно заметить по
+      характерному рисунку трафика - AmneziaWG - это доработанная версия WireGuard, где часть
+      служебных данных дополнительно замаскирована, чтобы сам факт использования туннеля было
+      не так легко разглядеть.
+    </p>
+
+    <div class="finding">
+      <b>Реальная находка.</b> Пакетов AmneziaWG нет в официальном репозитории OpenWrt - нужен
+      сторонний, но подписанный репозиторий. И имя пакета неожиданно другое:
+      <code>luci-proto-amneziawg</code>, не <code>luci-app-amneziawg</code>.
+      <div class="src">источник: 00-OPIS-I-NAHODKI.md, находка 4</div>
+    </div>
+
+    <div class="finding">
+      <b>Ещё находка.</b> Приложение AmneziaVPN не даёт скачать обычный файл настроек (.conf) - только
+      ссылку вида <code>vpn://...</code>. Попытка вставить эту ссылку в форму импорта на роутере
+      падает с ошибкой "не хватает приватного ключа" - роутер ждёт настоящий файл, а не такую ссылку.
+      Рабочий обход - создать интерфейс вручную в LuCI и забрать нужные параметры прямо с сервера.
+      <div class="src">источник: 00-OPIS-I-NAHODKI.md, находка 8</div>
+    </div>
+
+    <div class="fake-terminal" data-terminal="ch3">
+      <div class="note">тренажёр - забери с сервера параметры для клиентского конфига</div>
+      <div class="output"></div>
+      <div class="prompt-row"><span class="sym">$</span><input type="text" placeholder="введи команду..."></div>
+      <div class="hintline" hidden></div>
+    </div>
+
+    <div class="quest">
+      <b>Задание.</b> Введи: <code>docker exec amnezia-awg2 cat /opt/amnezia/awg/awg0.conf</code>
+    </div>
+    <div class="hint-row">
+      <details class="hint"><summary>Подсказка 1</summary>Команда выполняется НА СЕРВЕРЕ, не на роутере - там, где приложение AmneziaVPN уже развернуло контейнер с настройками.</details>
+      <details class="hint"><summary>Подсказка 2</summary>Значения ниже условные (свои у каждой установки) - важна не конкретная цифра, а то, что именно нужно перенести: ключи, адрес сервера и параметры маскировки (строки Jc/Jmin/Jmax/S1/S2).</details>
+      <details class="solution"><summary>Показать разбор</summary>Сервер хранит все параметры, нужные для ручного создания интерфейса на роутере - обходной путь работает именно потому, что данные всё равно лежат на сервере, просто приложение не отдаёт их напрямую в удобном формате. На роутер идёт клиентский профиль: свой приватный ключ, публичный ключ сервера, адрес сервера и те же параметры маскировки.</details>
+    </div>
+
+    <div class="finding">
+      <b class="finding-warn">Важно, не пропускать.</b> Конфиги содержат приватные ключи. Не пересылать
+      их в переписку, чат, мессенджер. Если случилось - удалить клиента на сервере и выпустить нового.
+    </div>
+
+    <div class="effect">
+      Этот обходной путь снимает единственную реальную преграду между "поставил приложение" и
+      "настроил туннель на роутере вручную" - без него застреваешь на ошибке импорта и непонятно,
+      что вообще делать дальше.
+    </div>
+    <div class="done-row"><input type="checkbox" id="done-3"><label for="done-3">Глава пройдена</label></div>
+  </div>
+
+  <!-- ==================== Глава 4 ==================== -->
+  <div class="chapter">
+    <span class="chapter-num">Глава 4</span>
+    <h2>Кто и как через туннель ходит</h2>
+    <p class="theory">
+      <b>Теория, с нуля.</b> Когда набираешь в браузере адрес сайта (например google.com), компьютер
+      сначала должен превратить это имя в настоящий числовой адрес - этим занимается DNS, вроде
+      телефонной книги для интернета: имя знаешь ты, а номер нужен технике. Не весь трафик обязательно
+      гнать через арендованный сервер за границей - выборочная маршрутизация (split tunneling) решает
+      по правилам, что идёт напрямую, а что через туннель. DNS-фильтрация работает по тому же принципу,
+      что обычные блокировки сайтов, только по той же телефонной книге можно решать не что скрыть,
+      а что отфильтровать. У метода есть честный предел - ниже будет конкретный пример, где он не
+      справляется.
+    </p>
+
+    <div class="finding">
+      <b>Реальная находка.</b> Podkop не создаёт туннель сам - он использует уже поднятый интерфейс.
+      Настраивать нужно строго в этом порядке: сначала AmneziaWG, потом Podkop.
+      <div class="src">источник: 00-OPIS-I-NAHODKI.md, находка 5</div>
+    </div>
+
+    <div class="finding">
+      <b>Ещё находка.</b> AdGuard, вписанный не в то звено цепочки DNS, ломает всю схему. Цепочка -
+      это просто порядок, в котором запрос "как называется этот сайт по номеру" проходит несколько
+      программ подряд, каждая решает свою маленькую задачу. Рабочий порядок в этой истории:
+      <code>dnsmasq (раздаёт настройки сети) → sing-box (решает, идти ли через туннель) → AdGuard
+      (фильтрует рекламу) → интернет</code>.
+      <div class="src">источник: 00-OPIS-I-NAHODKI.md, находка 9</div>
+    </div>
+
+    <div class="finding">
+      <b>И ещё.</b> AdGuard может слушать только IPv6, хотя в настройках указано "все интерфейсы" -
+      обычный <code>nslookup</code> при этом молча не отвечает так, как ожидается.
+      <div class="src">источник: 00-OPIS-I-NAHODKI.md, находки 10, 12</div>
+    </div>
+
+    <div class="fake-terminal" data-terminal="ch4">
+      <div class="note">тренажёр - проверь DNS правильным инструментом</div>
+      <div class="output"></div>
+      <div class="prompt-row"><span class="sym">$</span><input type="text" placeholder="введи команду..."></div>
+      <div class="hintline" hidden></div>
+    </div>
+
+    <div class="quest">
+      <b>Задание.</b> Введи: <code>dig @127.0.0.1 google.com +timeout=2 +tries=1</code>
+    </div>
+    <div class="hint-row">
+      <details class="hint"><summary>Подсказка 1</summary>busybox nslookup (упрощённая версия, которая обычно стоит на роутере) молча игнорирует указанный порт - половина ложных выводов при отладке отсюда.</details>
+      <details class="solution"><summary>Показать разбор</summary>dig ставится вместе с Podkop и умеет то, чего не умеет busybox nslookup - явно указывать порт запроса. Если команда отвечает быстро и без ошибки - DNS-сервер на этом порту действительно работает.</details>
+    </div>
+
+    <div class="finding">
+      <b>Честный предел метода.</b> DNS-фильтрация принципиально не режет рекламу в YouTube - ролики
+      и реклама раздаются с одних и тех же серверов, отличить их на уровне DNS нельзя.
+      <div class="src">источник: 00-OPIS-I-NAHODKI.md, раздел "Что осталось нерешённым"</div>
+    </div>
+
+    <div class="effect">
+      Порядок настройки и правильное звено для DNS-фильтра - самое частое место, где всё ломается
+      не из-за ошибки в самих инструментах, а из-за неправильной последовательности их включения.
+    </div>
+    <div class="done-row"><input type="checkbox" id="done-4"><label for="done-4">Глава пройдена</label></div>
+  </div>
+
+  <!-- ==================== Глава 5 ==================== -->
+  <div class="chapter">
+    <span class="chapter-num">Глава 5</span>
+    <h2>Доступ к своей сети обратно</h2>
+    <p class="theory">
+      <b>Теория, с нуля.</b> До сих пор речь шла про то, чтобы выходить из дома в интернет через
+      чужой сервер. Здесь задача обратная - попасть обратно в свою домашнюю сеть, находясь где угодно,
+      как будто ты всё ещё дома, даже если физически в другом городе. Mesh VPN - сеть без единого
+      центра, где все устройства видят друг друга напрямую. Exit node - устройство, через которое
+      остальные участники такой сети выходят в интернет. Всё вместе - именно про "вернуться домой",
+      не про анонимность в сети.
+    </p>
+
+    <div class="finding">
+      <b>Реальная находка.</b> На телефоне exit node изначально был выбран неправильно - "этот
+      телефон" вместо роутера. Внешне ничего не ломается явно, но смысл настройки при этом теряется.
+      <div class="src">источник: 00-OPIS-I-NAHODKI.md, состав архива 08-tailscale</div>
+    </div>
+
+    <div class="theory">
+      <b>Перед заданием.</b> На роутере Tailscale уже настроен как раз в предыдущих шагах. На телефоне
+      нужно поставить обычное приложение "Tailscale" из магазина приложений и войти в тот же аккаунт,
+      которым настраивал роутер.
+    </div>
+
+    <div class="screenshot-slot">[сюда позже - скриншот меню Tailscale с выбором exit node]</div>
+
+    <div class="quest">
+      <b>Задание (без тренажёра, на реальном телефоне).</b> Открой приложение Tailscale, проверь,
+      какой exit node выбран сейчас - свой роутер или устройство, с которого смотришь.
+    </div>
+
+    <div class="effect">
+      Эта путаница легко проходит незамеченной - телефон продолжает выходить в интернет в любом
+      случае, просто не тем маршрутом, который был задуман.
+    </div>
+    <div class="done-row"><input type="checkbox" id="done-5"><label for="done-5">Глава пройдена</label></div>
+  </div>
+
+  <footer class="note">черновик курса про роутер · собран из архива 13-роутер · имя не выбрано</footer>
+</div>
+
+<script>
+  var slug = 'router-kurs-draft';
+
+  // --- прогресс ---
+  var checkboxes = document.querySelectorAll('.done-row input[type="checkbox"]');
+  var bar = document.getElementById('progress-bar');
+  var label = document.getElementById('progress-label');
+  function updateProgress() {
+    var done = 0;
+    checkboxes.forEach(function (cb) { if (cb.checked) done++; });
+    bar.style.width = (done / checkboxes.length * 100) + '%';
+    label.textContent = done + ' из ' + checkboxes.length + ' глав пройдено';
+  }
+  checkboxes.forEach(function (cb) {
+    var saved = localStorage.getItem(slug + '-' + cb.id);
+    if (saved === 'true') cb.checked = true;
+    cb.addEventListener('change', function () {
+      localStorage.setItem(slug + '-' + cb.id, cb.checked);
+      updateProgress();
+    });
+  });
+  updateProgress();
+
+  // --- тренажёр-эмулятор терминала: команда -> честный, заранее записанный ответ ---
+  var СЦЕНАРИИ = {
+    ch1: {
+      // grep печатает только совпавшую строку, без комментариев — честно
+      'strings cudy_tr3000-256mb-v1-sysupgrade.bin | grep -i f50l1g41':
+        'nand-chip-compatible = "cudy,tr3000-256mb-v1", "F50L1G41LC"'
+    },
+    ch2: {
+      // uci set/commit молча ничего не печатают — это реальное поведение,
+      // не пропуск. restart рвёт текущее соединение — предупреждение ниже,
+      // не в самом выводе (реальный restart тоже почти ничего не пишет).
+      "uci set network.lan.ipaddr='192.168.5.1'": '',
+      'uci commit network': '',
+      '/etc/init.d/network restart': '(соединение с роутером сейчас прервётся — это ожидаемо, подробности в подсказке)'
+    },
+    ch3: {
+      // клиентский профиль (то, что реально нужно вставить в awg0 на РОУТЕРЕ),
+      // не серверный — с параметрами обфускации AmneziaWG, значения условные
+      'docker exec amnezia-awg2 cat /opt/amnezia/awg/awg0.conf':
+        '[Interface]\nPrivateKey = <ключ этого клиента, свой у каждого>\nAddress = 10.8.1.6/32\nJc = 4\nJmin = 40\nJmax = 70\nS1 = 42\nS2 = 28\nH1-H4 = <заданы на сервере>\n\n[Peer]\nPublicKey = <публичный ключ сервера>\nEndpoint = <ip сервера>:35246\nAllowedIPs = 0.0.0.0/0'
+    },
+    ch4: {
+      // код возврата dig не печатает сам — это отдельная проверка,
+      // вынесена в разбор задания, не в вывод команды
+      'dig @127.0.0.1 google.com +timeout=2 +tries=1':
+        ';; ANSWER SECTION:\ngoogle.com.  300  IN  A  <настоящий или подменённый адрес, зависит от FakeIP>\n\n;; Query time: 4 msec'
+    }
+  };
+
+  document.querySelectorAll('.fake-terminal').forEach(function (term) {
+    var key = term.dataset.terminal;
+    var сценарий = СЦЕНАРИИ[key] || {};
+    var input = term.querySelector('input');
+    var output = term.querySelector('.output');
+    var hintline = term.querySelector('.hintline');
+
+    input.addEventListener('keydown', function (e) {
+      if (e.key !== 'Enter') return;
+      var команда = input.value.trim();
+      var нормализовано = команда.toLowerCase();
+      output.textContent += '$ ' + команда + '\n';
+      if (сценарий.hasOwnProperty(нормализовано)) {
+        output.textContent += сценарий[нормализовано] + '\n\n';
+        hintline.hidden = true;
+      } else {
+        hintline.hidden = false;
+        hintline.textContent = 'команда не из этого шага — сверься с заданием чуть выше';
+      }
+      input.value = '';
+      term.scrollTop = term.scrollHeight;
+    });
+  });
+</script>
+</body>
+</html>
