@@ -1,0 +1,184 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Глава 4. Своя сеть дома</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🏠</text></svg>">
+<style>
+  :root {
+    --paper: #FFFFFF; --raised: #FFFFFF; --ink: #2B2B2B; --muted: #737373; --muted-2: #A3A3A3;
+    --line: #E4E4E4; --line-soft: #F0F0F0; --accent: #5C5C5C; --accent-bg: #ECECEC; --accent-line: #C6C6C6;
+    --pos: #1A7F4E; --pos-bg: #E4F3EA; --warn: #B5762A; --warn-bg: #FBF0E2;
+    --shadow-sm: 0 1px 2px rgba(24,32,22,0.04);
+    --shadow: 0 1px 2px rgba(24,32,22,0.04), 0 8px 22px -10px rgba(24,32,22,0.12);
+    --radius: 14px; --radius-sm: 9px;
+    --font-display: ui-serif, "Iowan Old Style", "Palatino Linotype", Georgia, serif;
+    --font-body: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+    --font-mono: ui-monospace, "SF Mono", "Cascadia Code", Consolas, monospace;
+    --space-2: 8px; --space-3: 12px; --space-4: 16px; --space-5: 24px;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--paper); color: var(--ink); font-family: var(--font-body);
+    font-size: 0.95rem; line-height: 1.55; }
+  .wrap { max-width: 680px; margin: 0 auto; padding: var(--space-5) var(--space-4) 80px; }
+  .nav { display: flex; justify-content: space-between; font-size: 0.85rem; margin-bottom: var(--space-4); }
+  .nav a { color: var(--accent); }
+  h1 { font-family: var(--font-display); font-size: 1.6rem; margin: 0 0 var(--space-2); }
+  h2 { font-size: 1.05rem; margin: var(--space-4) 0 var(--space-2); }
+  .theory { background: var(--accent-bg); border-radius: var(--radius-sm); padding: var(--space-3) var(--space-4);
+    font-size: 0.9rem; margin: var(--space-3) 0; }
+  .step { background: var(--raised); border: 1px solid var(--line); border-radius: var(--radius);
+    padding: var(--space-4); margin: var(--space-4) 0; box-shadow: var(--shadow-sm); }
+  .example { border-left: 3px solid var(--accent); padding: var(--space-2) var(--space-4); margin: var(--space-3) 0;
+    font-size: 0.9rem; color: var(--muted); }
+  .scope-note { background: #FFF4D6; border-radius: var(--radius-sm); padding: var(--space-3) var(--space-4);
+    font-size: 0.85rem; color: #7a5c10; margin: var(--space-4) 0; }
+  .checklist { background: var(--pos-bg); border-radius: var(--radius-sm); padding: var(--space-4);
+    margin: var(--space-4) 0; font-size: 0.9rem; }
+  .checklist ul { margin: var(--space-2) 0 0; padding-left: var(--space-4); }
+  .fork { background: var(--warn-bg); border-radius: var(--radius-sm); padding: var(--space-4);
+    margin: var(--space-4) 0; font-size: 0.9rem; color: #5c4310; }
+  .fork .routes { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-3); margin-top: var(--space-3); }
+  @media (max-width: 560px) { .fork .routes { grid-template-columns: 1fr; } }
+  .fork .route { background: var(--raised); border: 1px solid var(--line); border-radius: var(--radius-sm);
+    padding: var(--space-3); }
+  .fork .route a { color: var(--ink); }
+  .done-row { display: flex; align-items: center; gap: var(--space-2); margin-top: var(--space-4);
+    padding-top: var(--space-3); border-top: 1px dashed var(--line); }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="nav"><a href="00-оглавление.html">← оглавление</a><span>Глава 4 из 33</span></div>
+  <h1>Своя сеть дома</h1>
+  <p style="color:var(--muted)">Подключить роутер и войти в его настройки первый раз - одинаково,
+    независимо от того, что будет дальше.</p>
+
+  <div class="scope-note">
+    Честно: здесь нет скриншотов именно этого шага. В реальном архиве этого проекта фотографировали
+    покупку, а следующий шаг, который сохранился - уже аренда сервера и сама прошивка (главы 6-7).
+    Обычную первую
+    настройку никто не документировал, потому что тогда никто не планировал писать курс. Дальше -
+    подробное описание того, как это устроено на практике почти на любом роутере, без выдуманных
+    скриншотов конкретно этой модели.
+  </div>
+
+  <div class="step">
+    <h2>Физическое подключение</h2>
+    <p class="theory">
+      <b>Теория.</b> У роутера обычно два вида портов: один WAN (иногда подписан отдельным цветом) -
+      сюда подключается провод от провайдера или от предыдущего роутера, и несколько LAN - сюда
+      подключаются провода к компьютерам или свитчам внутри дома. Перепутать физически можно, но
+      ничего не сломается: сеть просто не заработает, пока провод не окажется в правильном порту.
+    </p>
+  </div>
+
+  <div class="step">
+    <h2>Первый вход в настройки</h2>
+    <p class="theory">
+      <b>Теория.</b> Сразу после подключения питания роутер поднимает свою веб-страницу настроек -
+      именно по тому IP-адресу с наклейки (глава 3). Провод от провайдера в WAN-порт для этого не
+      обязателен: страница настроек живёт в локальной сети роутера, доступ к ней не зависит от
+      того, есть ли уже интернет. Заходишь на этот адрес в браузере с любого устройства,
+      подключённого к этому роутеру (по Wi-Fi или проводом), вводишь логин и пароль по умолчанию
+      (тоже с наклейки или из инструкции) - и попадаешь в панель управления. Это графический
+      интерфейс (GUI из главы 1), а не терминал - тут не печатают команды, а нажимают на поля и
+      кнопки.
+    </p>
+    <div class="example">
+      <b>Пример.</b> Типичная последовательность у большинства бытовых роутеров: страница логина →
+      мастер первой настройки (выбор языка, часового пояса) → страница с полями "имя сети (SSID)" и
+      "пароль Wi-Fi" → кнопка "сохранить и перезагрузить". После перезагрузки старое имя сети
+      исчезает из списка доступных, вместо него появляется новое.
+    </div>
+  </div>
+
+  <div class="step">
+    <h2>Как роутер сам получает интернет</h2>
+    <p class="theory">
+      <b>Теория.</b> Провод от провайдера идёт именно в WAN-порт - без него интернета не будет, хотя
+      в панель управления зайти уже можно (прошлый шаг). Дальше роутеру самому нужен способ получить
+      выход в сеть: у большинства провайдеров это происходит автоматически (роутер сам получает
+      настройки, включая свой внешний адрес, без ручного ввода), у части провайдеров нужно вручную
+      ввести логин и пароль для подключения (это отдельная страница в тех же настройках, обычно
+      называется PPPoE). Какой вариант нужен - обычно написано в договоре с провайдером или на его
+      сайте.
+    </p>
+    <div class="checklist" style="margin-top:0">
+      <b>Проверка.</b> Как понять, что интернет действительно заработал, а не просто настройки
+      сохранились? Открыть любой сайт в браузере с устройства, подключённого к этому роутеру - если
+      страница загрузилась, WAN-сторона настроена правильно.
+    </div>
+  </div>
+
+  <div class="step">
+    <h2>Первым делом - сменить пароль по умолчанию</h2>
+    <p class="theory">
+      <b>Теория.</b> Пароль администратора и пароль Wi-Fi по умолчанию напечатаны на наклейке -
+      значит, их знает любой, кто взял в руки коробку или заглянул под роутер. Смена обоих паролей
+      сразу после первого входа - не паранойя, а базовая гигиена: ровно то же самое правило, что и
+      с любым другим аккаунтом, где стоит пароль "как из коробки".
+    </p>
+  </div>
+
+  <div class="step">
+    <h2>Откуда устройства берут свой адрес</h2>
+    <p class="theory">
+      <b>Теория.</b> Каждое устройство, которое подключается к роутеру - телефон, ноутбук, умный
+      чайник - получает свой локальный IP-адрес (глава 2) автоматически, без того, чтобы кто-то
+      вручную его вводил. Этим занимается сам роутер: у него есть список свободных адресов, и он
+      выдаёт по одному каждому новому устройству, которое подключилось. У этого способа есть
+      название - DHCP; в настройках роутера эта функция обычно так и подписана.
+    </p>
+    <div class="checklist" style="margin-top:0">
+      <b>Проверь себя.</b> У роутера самого тоже есть локальный IP-адрес - тот самый, с наклейки.
+      Это тот же адрес, что получает телефон, когда подключается к Wi-Fi, или другой?
+      <details class="solution" style="margin-top:8px"><summary>Ответ</summary>Другой. Адрес с
+      наклейки - это адрес самого роутера в его собственной сети, телефон получает свой отдельный
+      адрес, просто в том же диапазоне (например, оба начинаются на 192.168.10.).</details>
+    </div>
+  </div>
+
+  <div class="fork">
+    <b>Развилка, о которой предупреждали в прошлой главе.</b> Домашняя сеть настроена - дальше пути
+    расходятся:
+    <div class="routes">
+      <div class="route">
+        <b>🟡 Не планируешь свой сервер?</b><br><a href="05-esli-ne-svoy-server.html">Глава 5</a> -
+        как быть с VPN без прошивки и без своего сервера, коротко и текстом.
+      </div>
+      <div class="route">
+        <b>🟢 Готов к прошивке?</b><br>Глава 6 (скоро) - превращаем роутер в OpenWrt. Рискованный
+        шаг (роутер можно на время или насовсем испортить), дальше будет отдельное честное
+        предупреждение перед стартом.
+      </div>
+    </div>
+  </div>
+
+  <div class="checklist">
+    <b>Ты понял тему, если можешь:</b>
+    <ul>
+      <li>объяснить разницу между портом WAN и портами LAN</li>
+      <li>сказать, почему первый вход в настройки роутера - это GUI, а не терминал</li>
+      <li>объяснить, зачем сразу менять пароли по умолчанию</li>
+      <li>сказать, чем адрес самого роутера отличается от адреса, который получает телефон</li>
+      <li>назвать способ, которым устройства получают адрес автоматически, и как проверить, что
+        интернет на роутере реально заработал</li>
+    </ul>
+  </div>
+
+  <div class="done-row"><input type="checkbox" id="done-4"><label for="done-4">Глава пройдена</label></div>
+  <div class="nav" style="margin-top:24px"><a href="03-pokupka-routera.html">← назад</a><a href="05-esli-ne-svoy-server.html">дальше →</a></div>
+</div>
+
+<script>
+  var slug = 'gramotnost-kniga';
+  document.querySelectorAll('.done-row input[type="checkbox"]').forEach(function (cb) {
+    var saved = localStorage.getItem(slug + '-' + cb.id);
+    if (saved === 'true') cb.checked = true;
+    cb.addEventListener('change', function () { localStorage.setItem(slug + '-' + cb.id, cb.checked); });
+  });
+</script>
+</body>
+</html>

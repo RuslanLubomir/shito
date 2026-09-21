@@ -1,0 +1,479 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Глава 7. Git и совместная работа</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🌿</text></svg>">
+<style>
+  :root {
+    --paper: #FFFFFF; --raised: #FFFFFF; --ink: #2B2B2B; --muted: #737373; --muted-2: #A3A3A3;
+    --line: #E4E4E4; --line-soft: #F0F0F0; --accent: #5C5C5C; --accent-bg: #ECECEC; --accent-line: #C6C6C6;
+    --pos: #1A7F4E; --pos-bg: #E4F3EA; --warn: #B5762A; --warn-bg: #FBF0E2;
+    --shadow-sm: 0 1px 2px rgba(24,32,22,0.04);
+    --shadow: 0 1px 2px rgba(24,32,22,0.04), 0 8px 22px -10px rgba(24,32,22,0.12);
+    --radius: 14px; --radius-sm: 9px;
+    --font-display: ui-serif, "Iowan Old Style", "Palatino Linotype", Georgia, serif;
+    --font-body: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+    --font-mono: ui-monospace, "SF Mono", "Cascadia Code", Consolas, monospace;
+    --space-2: 8px; --space-3: 12px; --space-4: 16px; --space-5: 24px;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--paper); color: var(--ink); font-family: var(--font-body);
+    font-size: 0.95rem; line-height: 1.55; }
+  .wrap { max-width: 680px; margin: 0 auto; padding: var(--space-5) var(--space-4) 80px; }
+  .nav { display: flex; justify-content: space-between; font-size: 0.85rem; margin-bottom: var(--space-4); }
+  .nav a { color: var(--accent); }
+  h1 { font-family: var(--font-display); font-size: 1.6rem; margin: 0 0 var(--space-2); }
+  h2 { font-size: 1.05rem; margin: var(--space-4) 0 var(--space-2); }
+  .theory { background: var(--accent-bg); border-radius: var(--radius-sm); padding: var(--space-3) var(--space-4);
+    font-size: 0.9rem; margin: var(--space-3) 0; }
+  .step { background: var(--raised); border: 1px solid var(--line); border-radius: var(--radius);
+    padding: var(--space-4); margin: var(--space-4) 0; box-shadow: var(--shadow-sm); }
+  .example { border-left: 3px solid var(--accent); padding: var(--space-2) var(--space-4); margin: var(--space-3) 0;
+    font-size: 0.9rem; color: var(--muted); }
+  .scope-note { background: #FFF4D6; border-radius: var(--radius-sm); padding: var(--space-3) var(--space-4);
+    font-size: 0.85rem; color: #7a5c10; margin: var(--space-4) 0; }
+  pre.code-block { background: var(--ink); color: #EDEDED; padding: var(--space-4); border-radius: var(--radius-sm);
+    font-family: var(--font-mono); font-size: 0.85rem; white-space: pre-wrap; margin: var(--space-3) 0; }
+  .fake-terminal { background: #1b1b1b; border-radius: var(--radius-sm); padding: var(--space-4);
+    font-family: var(--font-mono); font-size: 0.85rem; color: #d8d8d8; margin: var(--space-3) 0; }
+  .fake-terminal .output { white-space: pre-wrap; margin: var(--space-2) 0; min-height: 1.2em; }
+  .fake-terminal .prompt-row { display: flex; align-items: center; gap: var(--space-2); }
+  .fake-terminal .prompt-row span.sym { color: #6fcf6f; }
+  .fake-terminal input { background: transparent; border: none; color: #fff; font-family: var(--font-mono);
+    font-size: 0.85rem; flex: 1; outline: none; }
+  .quest { border-left: 3px solid var(--accent); padding: var(--space-2) var(--space-4); margin: var(--space-4) 0; }
+  details.hint, details.solution { border: 1px solid var(--line); border-radius: var(--radius-sm);
+    padding: var(--space-2) var(--space-3); margin-bottom: var(--space-2); font-size: 0.88rem; }
+  details.solution summary { color: var(--pos); font-weight: 600; }
+  .checklist { background: var(--pos-bg); border-radius: var(--radius-sm); padding: var(--space-4);
+    margin: var(--space-4) 0; font-size: 0.9rem; }
+  .checklist ul { margin: var(--space-2) 0 0; padding-left: var(--space-4); }
+  .done-row { display: flex; align-items: center; gap: var(--space-2); margin-top: var(--space-4);
+    padding-top: var(--space-3); border-top: 1px dashed var(--line); }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="nav"><a href="00-оглавление.html">← оглавление</a><span>Глава 7 из 33</span></div>
+  <h1>Git и совместная работа</h1>
+  <p style="color:var(--muted)">Как хранить не только текущую версию файлов, а всю их историю - и как
+    несколько человек правят один код, не затирая друг друга.</p>
+
+  <div class="theory">
+    <b>Что такое git одним предложением.</b> Git - это программа, которая живёт рядом с твоей папкой
+    проекта и умеет запоминать состояние всех файлов на любой момент времени, чтобы к этому моменту
+    можно было вернуться. Ты продолжаешь работать обычным редактором; git просто ведёт журнал.
+    В главе 6 мы его уже установили внутри WSL, так что все команды ниже даём именно из терминала
+    Ubuntu - того же самого, где мы проверяли <code>git --version</code>.
+  </div>
+  <div class="theory">
+    <b>Как работает тренажёр ниже.</b> Это имитация терминала: он понимает ровно те команды, что
+    даны в задании шага, и печатает тот текст, который git реально выводит в такой ситуации. Если
+    набрать что-то другое - ничего не сломается, просто в этом шаге отрабатывается конкретная
+    команда.
+  </div>
+
+  <div class="step">
+    <h2>Зачем нужен git, если можно копировать папку</h2>
+    <p class="theory">
+      <b>Теория.</b> "Сохранить копию" даёт один снимок и быстро превращается в кашу из папок
+      <code>проект_финал</code>, <code>проект_финал2</code>, <code>проект_финал_точно</code>. Git даёт
+      две вещи, которых у копий нет. Первая - непрерывная история: каждая сохранённая точка помнит,
+      <i>что</i> именно изменилось, <i>когда</i> и <i>зачем</i>, и к любой точке можно откатиться.
+      Вторая - совместная работа: git умеет складывать вместе правки двух людей в одном и том же
+      файле, если они трогали разные строки, и честно предупреждает, если трогали одну и ту же.
+    </p>
+    <div class="example">
+      <b>Пример.</b> В проекте "Демо Банк" двое: один правит текст на странице входа, другой -
+      расчёт процентов в другом файле. С копиями папок кто-то из них перезапишет работу другого
+      целиком. С git каждый сохраняет свои точки, а потом их истории объединяются, и в итоговой
+      версии есть и новый текст, и новый расчёт.
+    </div>
+    <div class="checklist" style="margin-top:12px">
+      <b>Проверь себя.</b> Чем сохранённая точка в git отличается от копии папки с датой в названии?
+      <details class="solution" style="margin-top:8px"><summary>Ответ</summary>Копия - это просто
+      снимок файлов. Точка в git знает своё место в истории: от какой точки она произошла, что
+      именно в ней изменилось построчно и какое сообщение автор к ней написал. Поэтому по истории
+      можно двигаться, а не только "распаковать одну папку".</details>
+    </div>
+  </div>
+
+  <div class="step">
+    <h2>Первая сохранённая точка: init → status → add → commit</h2>
+    <p class="theory">
+      <b>Теория.</b> Четыре понятия по порядку. <b>Репозиторий</b> - папка, за которой git следит;
+      создаётся командой <code>git init</code> (она добавляет внутрь скрытую подпапку <code>.git</code>,
+      где и лежит вся история). <code>git status</code> показывает, что изменилось с последней точки.
+      <code>git add файл</code> помечает, что именно должно попасть в следующую точку (эта "корзина
+      отобранного" называется индекс, или staging area). <code>git commit -m "сообщение"</code>
+      создаёт саму точку - коммит - из того, что отобрано.
+    </p>
+    <div class="example">
+      <b>Пример.</b> Разберём целиком: создаём папку проекта "Демо Банк", кладём в неё файл
+      <code>README.md</code> с одной строкой описания и делаем первый коммит.
+    </div>
+    <pre class="code-block">mkdir demo-bank
+cd demo-bank
+git init
+echo "# Демо Банк" > README.md
+git add README.md
+git commit -m "Добавить README с описанием проекта"</pre>
+    <p>Прогони эти команды в тренажёре по одной - смотри, что git отвечает на каждую.</p>
+    <div class="fake-terminal" data-terminal="basics">
+      <div class="output"></div>
+      <div class="prompt-row"><span class="sym">$</span><input type="text" placeholder="введи команду..."></div>
+    </div>
+    <div class="quest">
+      <b>Задание.</b> По очереди: <code>git init</code>, затем <code>git status</code>, затем
+      <code>git add README.md</code>, затем снова <code>git status</code>, затем
+      <code>git commit -m "Добавить README с описанием проекта"</code>.
+    </div>
+    <div class="hint-row">
+      <details class="hint"><summary>Подсказка</summary>Сообщение коммита пиши в кавычках целиком -
+      без них git решит, что это несколько отдельных аргументов.</details>
+      <details class="solution"><summary>Показать разбор</summary>До <code>add</code> файл числится
+      в разделе "Untracked files" - git его видит, но не отслеживает. После <code>add</code> он
+      переезжает в "Changes to be committed" - отобран для точки. <code>commit</code> печатает
+      короткий идентификатор точки (хеш, например <code>a1c3f9d</code>) и статистику:
+      сколько файлов и строк изменилось.</details>
+    </div>
+    <div class="theory">
+      <b>Почему сообщение важнее, чем кажется.</b> Через три месяца ты откроешь историю, чтобы найти,
+      где сломался расчёт процентов. Двадцать коммитов с текстом <code>fix</code> не помогут ничем -
+      придётся смотреть каждый. Правило простое: сообщение отвечает на вопрос "что изменится в
+      поведении проекта", в повелительной или безличной форме: <code>Исправить опечатку в заголовке
+      страницы входа</code>, а не <code>fix</code>, <code>изменения</code>, <code>ещё раз</code>.
+    </div>
+  </div>
+
+  <div class="step">
+    <h2>История: git log --oneline</h2>
+    <p class="theory">
+      <b>Теория.</b> <code>git log</code> печатает список коммитов от новых к старым с автором и
+      датой. Флаг <code>--oneline</code> сжимает каждый коммит до одной строки: короткий хеш плюс
+      сообщение. Это самый частый способ посмотреть историю - и именно здесь видно, хорошие у тебя
+      сообщения или нет.
+    </p>
+    <div class="example">
+      <b>Пример.</b> После пары коммитов в "Демо Банке" история выглядит так - и по ней сразу
+      понятно, что происходило.
+    </div>
+    <div class="fake-terminal" data-terminal="log">
+      <div class="output"></div>
+      <div class="prompt-row"><span class="sym">$</span><input type="text" placeholder="введи команду..."></div>
+    </div>
+    <div class="quest">
+      <b>Задание.</b> Введи <code>git log --oneline</code>.
+    </div>
+    <div class="hint-row">
+      <details class="hint"><summary>Подсказка</summary>Два минуса перед словом oneline, без пробела
+      внутри.</details>
+      <details class="solution"><summary>Показать разбор</summary>Каждая строка - один коммит.
+      Первый столбец - сокращённый хеш, по нему можно ссылаться на точку в других командах. Верхняя
+      строка - самая свежая точка.</details>
+    </div>
+  </div>
+
+  <div class="step">
+    <h2>Ветки: пробовать, не ломая рабочую версию</h2>
+    <p class="theory">
+      <b>Теория.</b> Ветка (branch) - это отдельная линия истории. Основную обычно зовут
+      <code>main</code>. Если нужно попробовать рискованное изменение, делают новую ветку: коммиты
+      идут в неё, а <code>main</code> остаётся ровно в том состоянии, в котором работал. Команды:
+      <code>git branch</code> - список ветвей (звёздочка у текущей), <code>git switch -c имя</code> -
+      создать новую и сразу перейти в неё, <code>git switch main</code> - вернуться назад,
+      <code>git merge имя</code> - влить изменения ветки в текущую. (В старых инструкциях вместо
+      <code>switch</code> встретится <code>git checkout -b</code> - это то же самое, мы дальше
+      используем только <code>switch</code>.)
+    </p>
+    <div class="example">
+      <b>Пример.</b> В "Демо Банке" хотим переписать текст на странице входа. Делаем ветку
+      <code>login-text</code>, коммитим там, убеждаемся, что всё хорошо, возвращаемся в
+      <code>main</code> и сливаем. Если бы не понравилось - ветку можно было просто выбросить, и
+      <code>main</code> не заметил бы ничего.
+    </div>
+    <div class="fake-terminal" data-terminal="branch">
+      <div class="output"></div>
+      <div class="prompt-row"><span class="sym">$</span><input type="text" placeholder="введи команду..."></div>
+    </div>
+    <div class="quest">
+      <b>Задание.</b> По очереди: <code>git branch</code>, <code>git switch -c login-text</code>,
+      <code>git branch</code>, <code>git switch main</code>, <code>git merge login-text</code>.
+    </div>
+    <div class="hint-row">
+      <details class="hint"><summary>Подсказка</summary>Сначала посмотри список ветвей, чтобы
+      увидеть, что изначально она одна.</details>
+      <details class="solution"><summary>Показать разбор</summary><code>git branch</code> в начале
+      показывает только <code>* main</code>. После <code>switch -c</code> появляется вторая ветка и
+      звёздочка переезжает на неё. <code>merge</code> в простом случае делает "fast-forward" - просто
+      сдвигает <code>main</code> вперёд к коммитам ветки, потому что в <code>main</code> с момента
+      ветвления ничего не менялось.</details>
+    </div>
+    <div class="checklist" style="margin-top:12px">
+      <b>Проверь себя.</b> Ты сделал в ветке три коммита и понял, что идея была плохая. Что
+      произошло с <code>main</code>?
+      <details class="solution" style="margin-top:8px"><summary>Ответ</summary>Ничего.
+      <code>main</code> стоит там же, где стоял до ветвления - пока не сделан <code>merge</code>,
+      изменения живут только в ветке.</details>
+    </div>
+  </div>
+
+  <div class="step">
+    <h2>GitHub и remote: история не только на твоём компьютере</h2>
+    <p class="theory">
+      <b>Теория.</b> Всё выше работало полностью локально - история лежит в папке <code>.git</code> на
+      твоём диске. <b>Remote</b> ("удалённый репозиторий") - это копия того же репозитория на
+      сервере, обычно на GitHub. Она нужна для двух вещей: не потерять всё вместе с диском и дать
+      другим людям доступ. <code>git remote add origin АДРЕС</code> один раз запоминает адрес под
+      именем <code>origin</code> (это просто принятое по традиции имя, не ключевое слово).
+      <code>git push</code> отправляет твои коммиты на сервер, <code>git pull</code> забирает оттуда
+      чужие.
+    </p>
+    <div class="example">
+      <b>Пример.</b> Создаём на GitHub пустой репозиторий <code>demo-bank</code>, копируем его адрес
+      и связываем с локальной папкой. Флаг <code>-u</code> при первом пуше запоминает связь ветки
+      <code>main</code> с <code>origin/main</code>, чтобы дальше хватало просто <code>git push</code>.
+    </div>
+    <div class="fake-terminal" data-terminal="remote">
+      <div class="output"></div>
+      <div class="prompt-row"><span class="sym">$</span><input type="text" placeholder="введи команду..."></div>
+    </div>
+    <div class="quest">
+      <b>Задание.</b> По очереди: <code>git remote add origin https://github.com/user/demo-bank.git</code>,
+      <code>git remote -v</code>, <code>git push -u origin main</code>, <code>git pull</code>.
+    </div>
+    <div class="hint-row">
+      <details class="hint"><summary>Подсказка</summary>Адрес репозитория оканчивается на
+      <code>.git</code> - GitHub даёт его готовым в кнопке "Code".</details>
+      <details class="solution"><summary>Показать разбор</summary><code>remote add</code> ничего не
+      печатает при успехе - это нормально для git. <code>remote -v</code> показывает адрес дважды:
+      отдельно для чтения (fetch) и для записи (push). <code>pull</code> при отсутствии новых чужих
+      коммитов отвечает <code>Already up to date.</code></details>
+    </div>
+  </div>
+
+  <div class="step">
+    <h2>Pull request: заявка "хочу влить это в main"</h2>
+    <p class="theory">
+      <b>Теория.</b> Pull request (PR) - это не команда git, а страница на GitHub. Смысл: "вот моя
+      ветка, вот построчная разница с <code>main</code> (её называют diff), давайте посмотрим и
+      решим, вливать или нет". До нажатия кнопки Merge в <code>main</code> ничего не попадает. PR
+      даёт три вещи: видимую разницу, место для обсуждения конкретных строк и возможность
+      автоматических проверок кода перед слиянием.
+    </p>
+    <div class="example">
+      <b>Пример.</b> Ветка <code>login-text</code> отправлена на GitHub через
+      <code>git push -u origin login-text</code>. На странице репозитория появляется предложение
+      "Compare &amp; pull request" - нажимаешь, пишешь заголовок и пояснение, создаёшь PR,
+      просматриваешь diff и жмёшь Merge pull request.
+    </div>
+    <div class="scope-note">
+      Честная оговорка: PR - это про командную работу, а в этом курсе ты пока один. Полезная
+      привычка всё равно тренируется в одиночку: делай ветку, пушь её, открывай PR сам себе,
+      перечитывай diff целиком и только потом жми Merge. Именно чтение своего же diff ловит
+      забытые отладочные строки и случайно закоммиченные пароли. Строгий процесс с обязательным
+      вторым проверяющим и запретом пуша прямо в <code>main</code> - тема отдельной главы про
+      командную разработку; здесь всё сознательно упрощено до одного человека.
+    </div>
+  </div>
+
+  <div class="step">
+    <h2>Конфликт слияния</h2>
+    <p class="theory">
+      <b>Теория.</b> Конфликт (merge conflict) возникает, когда две ветки изменили <i>одни и те же
+      строки</i> одного файла. Git не угадывает, чья правка правильная, поэтому останавливает слияние
+      и записывает в файл оба варианта с маркерами. Твоя задача - открыть файл, оставить нужный
+      текст, удалить все маркеры, затем <code>git add файл</code> и <code>git commit</code>.
+    </p>
+    <div class="example">
+      <b>Пример.</b> Внутри файла конфликт выглядит буквально так - и <code>&lt;&lt;&lt;&lt;&lt;&lt;&lt;</code>,
+      <code>=======</code>, <code>&gt;&gt;&gt;&gt;&gt;&gt;&gt;</code> это обычный текст, добавленный git,
+      его нужно стереть руками:
+    </div>
+    <pre class="code-block">&lt;&lt;&lt;&lt;&lt;&lt;&lt; HEAD
+# Демо Банк - интернет-банк для учебного проекта
+=======
+# Демо Банк - демонстрационный банковский сервис
+&gt;&gt;&gt;&gt;&gt;&gt;&gt; login-text</pre>
+    <p>Сверху - версия из текущей ветки (<code>HEAD</code>), снизу - из вливаемой.</p>
+    <div class="checklist" style="margin-top:0">
+      <b>Прежде чем продолжить.</b> Разрешить конфликт - значит физически открыть файл в редакторе и
+      руками решить, что там останется: можно оставить одну из двух строк целиком, обе сразу, или
+      написать третий вариант - и в любом случае стереть все три маркера
+      (<code>&lt;&lt;&lt;&lt;&lt;&lt;&lt;</code>, <code>=======</code>, <code>&gt;&gt;&gt;&gt;&gt;&gt;&gt;</code>)
+      вручную, git это за тебя не сделает.
+      <details class="solution" style="margin-top:8px"><summary>Как может выглядеть результат</summary>
+      Например, если решить оставить более короткую формулировку:
+      <pre class="code-block" style="margin-top:8px"># Демо Банк - демонстрационный банковский сервис</pre>
+      Ни одного маркера, ни одной лишней строки - именно так должен выглядеть файл, когда ты
+      набираешь <code>git add</code>.</details>
+    </div>
+    <div class="fake-terminal" data-terminal="conflict">
+      <div class="output"></div>
+      <div class="prompt-row"><span class="sym">$</span><input type="text" placeholder="введи команду..."></div>
+    </div>
+    <div class="quest">
+      <b>Задание.</b> Введи по очереди: <code>git merge login-text</code>, <code>git status</code>,
+      <code>cat README.md</code> (посмотреть файл уже после ручной правки в редакторе - представь, что
+      ты оставил короткую версию и стёр маркеры), затем <code>git add README.md</code> и
+      <code>git commit -m "Объединить версии описания проекта"</code>.
+    </div>
+    <div class="hint-row">
+      <details class="hint"><summary>Подсказка</summary>Конфликт - не ошибка и не поломка. Это
+      вопрос от git к тебе, на который отвечают правкой файла, а не командой.</details>
+      <details class="solution"><summary>Показать разбор</summary><code>status</code> во время
+      конфликта показывает раздел "Unmerged paths" и файл как <code>both modified</code>.
+      <code>cat README.md</code> подтверждает, что маркеров больше нет - файл уже в том виде, в
+      котором ты его оставил после правки. После этого <code>git add</code> означает "я решил конфликт
+      в этом файле", а <code>commit</code> завершает слияние отдельным коммитом.</details>
+    </div>
+  </div>
+
+  <div class="step">
+    <h2>.gitignore: чему в истории не место</h2>
+    <p class="theory">
+      <b>Теория.</b> <code>.gitignore</code> - обычный текстовый файл в корне репозитория со списком
+      шаблонов имён, которые git должен игнорировать: он перестанет предлагать их добавить и не
+      пустит в историю случайно. Игнорируют три типа вещей: секреты (файлы с паролями и ключами),
+      временные и служебные файлы (логи, <code>__pycache__</code>, <code>.vscode/</code>) и
+      зависимости - скачанные библиотеки, которые в любой момент ставятся заново по списку
+      (<code>node_modules/</code>).
+    </p>
+    <div class="example">
+      <b>Пример.</b> Минимальный <code>.gitignore</code> для "Демо Банка": слеш в конце означает
+      папку, звёздочка - любые символы.
+    </div>
+    <pre class="code-block">.env
+*.log
+node_modules/
+__pycache__/</pre>
+    <div class="theory">
+      <b>Связь с будущей главой.</b> В главе про секреты и переменные окружения пароль от базы
+      данных "Демо Банка" будет лежать в файле <code>.env</code>. Критично важно: этот файл должен
+      попасть в <code>.gitignore</code> <i>до</i> первого коммита. Git не забывает - если пароль
+      один раз попал в историю и уехал на GitHub, удаления файла следующим коммитом недостаточно,
+      старая точка всё ещё его содержит, и пароль придётся считать скомпрометированным и менять.
+    </div>
+    <div class="checklist" style="margin-top:12px">
+      <b>Проверь себя.</b> Ты закоммитил <code>.env</code> с паролем, запушил, заметил и следующим
+      коммитом файл удалил. Пароль в безопасности?
+      <details class="solution" style="margin-top:8px"><summary>Ответ</summary>Нет. Коммит с
+      паролем остался в истории и на сервере - его можно достать одной командой. Правильная реакция:
+      сменить сам пароль, а потом уже приводить репозиторий в порядок.</details>
+    </div>
+  </div>
+
+  <div class="step">
+    <h2>Задание: опечатка и осмысленный коммит</h2>
+    <p class="theory">
+      <b>Теория.</b> Рабочий цикл, который ты будешь повторять тысячи раз: правка в редакторе →
+      <code>git status</code> (убедиться, что изменилось именно то) → <code>git add</code> →
+      <code>git commit -m "..."</code>.
+    </p>
+    <div class="quest">
+      <b>Задание.</b> В <code>README.md</code> "Демо Банка" было написано <code>Демо Бнак</code>.
+      Считай, что ты уже исправил букву в редакторе. Проведи изменение через тренажёр до коммита -
+      и придумай сообщение, по которому через полгода будет понятно, что произошло.
+    </div>
+    <div class="fake-terminal" data-terminal="task">
+      <div class="output"></div>
+      <div class="prompt-row"><span class="sym">$</span><input type="text" placeholder="введи команду..."></div>
+    </div>
+    <div class="hint-row">
+      <details class="hint"><summary>Подсказка 1</summary>Начни с <code>git status</code> - он
+      покажет файл как <code>modified</code> и подскажет, какой командой его добавить.</details>
+      <details class="hint"><summary>Подсказка 2</summary>Тренажёр принимает сообщение
+      <code>Исправить опечатку в названии банка в README</code>. Слово <code>fix</code> он тоже
+      примет - но ответит замечанием.</details>
+      <details class="solution"><summary>Показать разбор</summary>Последовательность:
+      <code>git status</code> → <code>git add README.md</code> →
+      <code>git commit -m "Исправить опечатку в названии банка в README"</code>. Хорошее сообщение
+      называет действие и место; <code>fix</code> не называет ни того, ни другого.</details>
+    </div>
+  </div>
+
+  <div class="checklist">
+    <b>Ты понял тему, если можешь:</b>
+    <ul>
+      <li>объяснить, чем история коммитов лучше набора копий папки</li>
+      <li>назвать по порядку, что делают <code>git init</code>, <code>git status</code>,
+        <code>git add</code>, <code>git commit -m</code> и <code>git log --oneline</code></li>
+      <li>сказать своими словами, зачем нужен индекс (staging area) между правкой файла и коммитом</li>
+      <li>объяснить, зачем нужна ветка, и создать её командой <code>git switch -c</code></li>
+      <li>объяснить, что такое remote, и зачем нужны <code>push</code> и <code>pull</code></li>
+      <li>сказать, чем pull request отличается от простого <code>git merge</code> у себя на машине</li>
+      <li>узнать маркеры конфликта в файле и описать порядок его решения</li>
+      <li>назвать три типа файлов, которым место в <code>.gitignore</code>, и объяснить, почему
+        утёкший пароль нужно менять, а не просто удалять файл следующим коммитом</li>
+    </ul>
+  </div>
+
+  <div class="done-row"><input type="checkbox" id="done-7"><label for="done-7">Глава пройдена</label></div>
+  <div class="nav" style="margin-top:24px"><a href="06-nastroyka-okruzheniya.html">← назад</a><a href="08-linux-vseryoz.html">дальше →</a></div>
+</div>
+
+<script>
+  var slug = 'gramotnost-kniga';
+  document.querySelectorAll('.done-row input[type="checkbox"]').forEach(function (cb) {
+    var saved = localStorage.getItem(slug + '-' + cb.id);
+    if (saved === 'true') cb.checked = true;
+    cb.addEventListener('change', function () { localStorage.setItem(slug + '-' + cb.id, cb.checked); });
+  });
+
+  var СЦЕНАРИИ = {
+    basics: {
+      'git init': 'Initialized empty Git repository in /home/user/demo-bank/.git/',
+      'git status': 'On branch main\n\nNo commits yet\n\nUntracked files:\n  (use "git add <file>..." to include in what will be committed)\n\treadme.md\n\nnothing added to commit but untracked files present (use "git add" to track)',
+      'git add readme.md': '',
+      'git add .': '',
+      'git commit -m "добавить readme с описанием проекта"': '[main (root-commit) a1c3f9d] Добавить README с описанием проекта\n 1 file changed, 1 insertion(+)\n create mode 100644 README.md'
+    },
+    log: {
+      'git log --oneline': '7b21e04 Исправить опечатку в названии банка в README\na1c3f9d Добавить README с описанием проекта',
+      'git log': 'commit 7b21e0498c1a2f5d3b7e6c0d9a4f1b2c3d4e5f60\nAuthor: User <user@example.com>\nDate:   Mon Apr 8 11:42:10 2024 +0300\n\n    Исправить опечатку в названии банка в README\n\ncommit a1c3f9d2b4e6f8a0c2d4e6f8a0b2c4d6e8f0a2b4\nAuthor: User <user@example.com>\nDate:   Mon Apr 8 11:20:03 2024 +0300\n\n    Добавить README с описанием проекта'
+    },
+    branch: {
+      'git branch': '* main',
+      'git switch -c login-text': "Switched to a new branch 'login-text'",
+      'git switch main': "Switched to branch 'main'",
+      'git merge login-text': 'Updating 7b21e04..c58d3a1\nFast-forward\n README.md | 2 +-\n 1 file changed, 1 insertion(+), 1 deletion(-)'
+    },
+    remote: {
+      'git remote add origin https://github.com/user/demo-bank.git': '',
+      'git remote -v': 'origin\thttps://github.com/user/demo-bank.git (fetch)\norigin\thttps://github.com/user/demo-bank.git (push)',
+      'git push -u origin main': "Enumerating objects: 6, done.\nCounting objects: 100% (6/6), done.\nWriting objects: 100% (6/6), 512 bytes | 512.00 KiB/s, done.\nTotal 6 (delta 0), reused 0 (delta 0)\nTo https://github.com/user/demo-bank.git\n * [new branch]      main -> main\nbranch 'main' set up to track 'origin/main'.",
+      'git pull': 'Already up to date.'
+    },
+    conflict: {
+      'git merge login-text': 'Auto-merging README.md\nCONFLICT (content): Merge conflict in README.md\nAutomatic merge failed; fix conflicts and then commit the result.',
+      'git status': 'On branch main\nYou have unmerged paths.\n  (fix conflicts and run "git commit")\n  (use "git merge --abort" to abort the merge)\n\nUnmerged paths:\n  (use "git add <file>..." to mark resolution)\n\tboth modified:   README.md\n\nno changes added to commit (use "git add" and/or "git commit -a")',
+      'cat readme.md': '# Демо Банк - демонстрационный банковский сервис',
+      'git add readme.md': '',
+      'git commit -m "объединить версии описания проекта"': '[main 9f4c7b2] Объединить версии описания проекта'
+    },
+    task: {
+      'git status': 'On branch main\nChanges not staged for commit:\n  (use "git add <file>..." to update what will be committed)\n  (use "git restore <file>..." to discard changes in working directory)\n\tmodified:   README.md\n\nno changes added to commit (use "git add" and/or "git commit -a")',
+      'git add readme.md': '',
+      'git commit -m "исправить опечатку в названии банка в readme"': '[main 7b21e04] Исправить опечатку в названии банка в README\n 1 file changed, 1 insertion(+), 1 deletion(-)',
+      'git commit -m "fix"': '[main 7b21e04] fix\n 1 file changed, 1 insertion(+), 1 deletion(-)\n\n(коммит создан, но сообщение "fix" ничего не говорит: через полгода по нему не найти, где правилась опечатка. Попробуй сообщение, которое называет действие и место.)'
+    }
+  };
+  document.querySelectorAll('.fake-terminal').forEach(function (term) {
+    var сценарий = СЦЕНАРИИ[term.dataset.terminal] || {};
+    var input = term.querySelector('input');
+    var output = term.querySelector('.output');
+    input.addEventListener('keydown', function (e) {
+      if (e.key !== 'Enter') return;
+      var команда = input.value.trim();
+      output.textContent += '$ ' + команда + '\n';
+      var ответ = сценарий[команда.toLowerCase()];
+      if (ответ === '') ответ = '(команда выполнена, git ничего не печатает)';
+      output.textContent += (ответ || 'команда не из этого шага - попробуй именно ту, что в задании') + '\n\n';
+      input.value = '';
+    });
+  });
+</script>
+</body>
+</html>

@@ -1,0 +1,318 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Глава 6. Настройка рабочего места</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🛠️</text></svg>">
+<style>
+  :root {
+    --paper: #FFFFFF; --raised: #FFFFFF; --ink: #2B2B2B; --muted: #737373; --muted-2: #A3A3A3;
+    --line: #E4E4E4; --line-soft: #F0F0F0; --accent: #5C5C5C; --accent-bg: #ECECEC; --accent-line: #C6C6C6;
+    --pos: #1A7F4E; --pos-bg: #E4F3EA; --warn: #B5762A; --warn-bg: #FBF0E2;
+    --shadow-sm: 0 1px 2px rgba(24,32,22,0.04);
+    --shadow: 0 1px 2px rgba(24,32,22,0.04), 0 8px 22px -10px rgba(24,32,22,0.12);
+    --radius: 14px; --radius-sm: 9px;
+    --font-display: ui-serif, "Iowan Old Style", "Palatino Linotype", Georgia, serif;
+    --font-body: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+    --font-mono: ui-monospace, "SF Mono", "Cascadia Code", Consolas, monospace;
+    --space-2: 8px; --space-3: 12px; --space-4: 16px; --space-5: 24px;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--paper); color: var(--ink); font-family: var(--font-body);
+    font-size: 0.95rem; line-height: 1.55; }
+  .wrap { max-width: 680px; margin: 0 auto; padding: var(--space-5) var(--space-4) 80px; }
+  .nav { display: flex; justify-content: space-between; font-size: 0.85rem; margin-bottom: var(--space-4); }
+  .nav a { color: var(--accent); }
+  h1 { font-family: var(--font-display); font-size: 1.6rem; margin: 0 0 var(--space-2); }
+  h2 { font-size: 1.05rem; margin: var(--space-4) 0 var(--space-2); }
+  .theory { background: var(--accent-bg); border-radius: var(--radius-sm); padding: var(--space-3) var(--space-4);
+    font-size: 0.9rem; margin: var(--space-3) 0; }
+  .step { background: var(--raised); border: 1px solid var(--line); border-radius: var(--radius);
+    padding: var(--space-4); margin: var(--space-4) 0; box-shadow: var(--shadow-sm); }
+  .example { border-left: 3px solid var(--accent); padding: var(--space-2) var(--space-4); margin: var(--space-3) 0;
+    font-size: 0.9rem; color: var(--muted); }
+  .scope-note { background: #FFF4D6; border-radius: var(--radius-sm); padding: var(--space-3) var(--space-4);
+    font-size: 0.85rem; color: #7a5c10; margin: var(--space-4) 0; }
+  pre.code-block { background: var(--ink); color: #EDEDED; padding: var(--space-4); border-radius: var(--radius-sm);
+    font-family: var(--font-mono); font-size: 0.85rem; white-space: pre-wrap; margin: var(--space-3) 0; }
+  .fake-terminal { background: #1b1b1b; border-radius: var(--radius-sm); padding: var(--space-4);
+    font-family: var(--font-mono); font-size: 0.85rem; color: #d8d8d8; margin: var(--space-3) 0; }
+  .fake-terminal .output { white-space: pre-wrap; margin: var(--space-2) 0; min-height: 1.2em; }
+  .fake-terminal .prompt-row { display: flex; align-items: center; gap: var(--space-2); }
+  .fake-terminal .prompt-row span.sym { color: #6fcf6f; }
+  .fake-terminal input { background: transparent; border: none; color: #fff; font-family: var(--font-mono);
+    font-size: 0.85rem; flex: 1; outline: none; }
+  .quest { border-left: 3px solid var(--accent); padding: var(--space-2) var(--space-4); margin: var(--space-4) 0; }
+  details.hint, details.solution { border: 1px solid var(--line); border-radius: var(--radius-sm);
+    padding: var(--space-2) var(--space-3); margin-bottom: var(--space-2); font-size: 0.88rem; }
+  details.solution summary { color: var(--pos); font-weight: 600; }
+  .checklist { background: var(--pos-bg); border-radius: var(--radius-sm); padding: var(--space-4);
+    margin: var(--space-4) 0; font-size: 0.9rem; }
+  .checklist ul { margin: var(--space-2) 0 0; padding-left: var(--space-4); }
+  .done-row { display: flex; align-items: center; gap: var(--space-2); margin-top: var(--space-4);
+    padding-top: var(--space-3); border-top: 1px dashed var(--line); }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="nav"><a href="00-оглавление.html">← оглавление</a><span>Глава 6 из 33</span></div>
+  <h1>Настройка рабочего места</h1>
+  <p style="color:var(--muted)">Часть 3. «Демо Банк» - сквозной проект №1. Первая глава: собираем
+    на своей Windows 11 то окружение, в котором дальше будет жить весь проект.</p>
+
+  <div class="theory">
+    <b>Короткий переход.</b> До этого момента в книге был один настоящий проект - роутер: покупка,
+    домашняя сеть, развилка про свой сервер. Дальше начинается второй проект, параллельный первому.
+    Он вымышленный, но подаётся всерьёз, как рабочая задача: небольшой банк под названием
+    <b>Демо Банк</b> - у него есть сайт, база данных, сотрудники и требование "чтобы работало".
+    На Демо Банке мы по очереди пройдём весь набор инструментов профессии DevOps с нуля: git,
+    Docker, сборка, автоматический выпуск обновлений, мониторинг. Через несколько десятков глав мы
+    вернёмся к настоящему роутеру - но уже с этими инструментами в руках, и он перестанет быть
+    "коробкой с наклейкой".
+  </div>
+
+  <div class="scope-note">
+    Честная оговорка на всю главу. Установка программ - самая быстро устаревающая часть любого
+    курса: меняются версии, названия кнопок в мастере установки, порядок галочек. Поэтому здесь нет
+    скриншотов установщиков и нет "актуальных" номеров версий - вместо этого объясняется, <b>что</b>
+    мы ставим, <b>зачем</b> это нужно и <b>как проверить</b>, что установилось. Проверка командой -
+    единственное, что не устаревает. Все версии в примерах ниже записаны условно, в виде
+    <code>x.y.z</code>, чтобы не выдавать выдуманные числа за настоящие.
+  </div>
+
+  <div class="step">
+    <h2>Зачем на Windows нужен Linux: WSL2</h2>
+    <p class="theory">
+      <b>Теория.</b> Windows прекрасно работает сам по себе - вопрос не в этом. Вопрос в том, что
+      почти все серверы в мире работают на Linux (другая операционная система, бесплатная и
+      исторически "серверная"), и все инструменты профессии - Docker, скрипты для автоматизации,
+      серверные программы - написаны в первую очередь под Linux. <b>WSL2</b> (Windows Subsystem for
+      Linux, "подсистема Windows для Linux", версия 2) - это официальная часть Windows 11, которая
+      запускает внутри Windows настоящее ядро Linux. Не имитацию и не "похожие команды", а реальный
+      Linux, который живёт рядом с Windows и которому можно дать те же команды, что и настоящему
+      серверу. Ты остаёшься в своей системе, но получаешь настоящий линуксовый терминал.
+    </p>
+    <div class="example">
+      <b>Пример.</b> Дальше в проекте Демо Банк мы напишем файл-инструкцию для Docker и запустим её
+      командой. На арендованном сервере эта команда выглядит ровно так же, как в WSL2 на твоём
+      ноутбуке. Это и есть смысл WSL2: то, что заработало у тебя дома, повторяется на сервере без
+      переписывания под другую систему.
+    </div>
+    <div class="checklist" style="margin-top:12px">
+      <b>Проверь себя.</b> Чем WSL2 отличается от "программы, которая делает вид, что она Linux"?
+      <details class="solution" style="margin-top:8px"><summary>Ответ</summary>Внутри WSL2 работает
+      настоящее ядро Linux, поэтому линуксовые программы (включая Docker) выполняются по-настоящему,
+      а не переводятся на язык Windows. Поведение почти такое же, как на настоящем сервере.</details>
+    </div>
+  </div>
+
+  <div class="step">
+    <h2>Практика: установка WSL2 одной командой</h2>
+    <p class="theory">
+      <b>Теория.</b> В Windows 11 роль терминала играет <b>PowerShell</b> (или приложение
+      "Терминал Windows"). Его нужно запустить <b>от имени администратора</b> - то есть с правом
+      менять систему: кнопка "Пуск" → набрать "PowerShell" → правой кнопкой → "Запуск от имени
+      администратора". После этого одна команда включает подсистему и ставит дистрибутив Linux по
+      умолчанию - Ubuntu (самая распространённая версия Linux для начинающих).
+    </p>
+    <pre class="code-block">wsl --install</pre>
+    <p class="theory">
+      Что произойдёт: Windows включит нужные компоненты, скачает ядро Linux и попросит
+      <b>перезагрузить компьютер</b>. После перезагрузки установка Ubuntu продолжится сама и один
+      раз спросит <b>имя пользователя и пароль</b> для Linux - это отдельный от Windows аккаунт,
+      только внутри WSL. Пароль при вводе не отображается вообще никак (даже звёздочками) - это
+      нормально для Linux, просто печатай и нажимай Enter.
+    </p>
+    <div class="example">
+      <b>Пример.</b> Проверочная команда <code>wsl -l -v</code> (сокращение от
+      <code>wsl --list --verbose</code>) печатает список установленных дистрибутивов и, что важнее,
+      столбец <code>VERSION</code>. Нам нужна цифра <b>2</b>: если там 1, значит используется старая
+      подсистема, в которой Docker работать нормально не будет. Звёздочка слева означает
+      "дистрибутив по умолчанию".
+    </div>
+    <div class="fake-terminal" data-terminal="wsl">
+      <div class="output"></div>
+      <div class="prompt-row"><span class="sym">PS&gt;</span><input type="text" placeholder="введи команду..."></div>
+    </div>
+    <div class="quest">
+      <b>Задание.</b> Введи в тренажёре и нажми Enter: <code>wsl -l -v</code>
+    </div>
+    <div class="hint-row">
+      <details class="hint"><summary>Подсказка</summary>Команда пишется маленькими буквами, флаги
+      через пробел: сначала <code>-l</code> (список), потом <code>-v</code> (подробно).</details>
+      <details class="solution"><summary>Показать разбор</summary>В выводе три столбца: имя
+      дистрибутива (<code>Ubuntu</code>), состояние (<code>Running</code> - запущен,
+      <code>Stopped</code> - остановлен, это не ошибка) и версия подсистемы. Нужна версия 2. Если
+      стоит 1 - переключить можно командой
+      <code>wsl --set-version Ubuntu 2</code>.</details>
+    </div>
+  </div>
+
+  <div class="step">
+    <h2>Docker Desktop с интеграцией WSL2</h2>
+    <p class="theory">
+      <b>Теория.</b> <b>Docker</b> - инструмент, который упаковывает программу вместе со всем, что
+      ей нужно для работы (нужной версией языка, библиотеками, настройками), в один переносимый
+      "ящик". Такой ящик одинаково запускается и на твоём ноутбуке, и на сервере. Именно в такие
+      ящики мы дальше упакуем Демо Банк. На Windows ставится <b>Docker Desktop</b> - при установке
+      нужно оставить включённой галочку про <b>WSL2 backend / интеграцию с WSL</b>, а после установки
+      в настройках Docker Desktop (Settings → Resources → WSL integration) включить переключатель
+      для своей Ubuntu. Без этого Docker будет виден в Windows, но не в линуксовом терминале, где мы
+      работаем.
+    </p>
+    <p class="theory">
+      Разбор самого Docker - отдельная большая глава дальше. Здесь задача минимальная: поставить и
+      убедиться, что он отвечает.
+    </p>
+    <div class="example">
+      <b>Пример.</b> Проверка - команда <code>docker --version</code>, запущенная <b>внутри
+      Ubuntu</b> (открыть "Пуск" → Ubuntu, или в Терминале Windows выбрать вкладку Ubuntu). Она
+      печатает одну строку с версией. Если вместо этого появляется
+      <code>command not found</code> - интеграция с WSL не включена, вернись в настройки Docker
+      Desktop.
+    </div>
+    <div class="fake-terminal" data-terminal="docker">
+      <div class="output"></div>
+      <div class="prompt-row"><span class="sym">$</span><input type="text" placeholder="введи команду..."></div>
+    </div>
+    <div class="quest">
+      <b>Задание.</b> Введи в тренажёре: <code>docker --version</code>
+    </div>
+    <div class="hint-row">
+      <details class="hint"><summary>Подсказка</summary>Два дефиса перед словом
+      <code>version</code>, без пробела между ними.</details>
+      <details class="solution"><summary>Показать разбор</summary>Вывод в формате
+      <code>Docker version x.y.z, build &lt;хеш&gt;</code>. Точные числа у тебя будут свои - важно
+      только то, что команда вообще отвечает: значит, Docker установлен и виден из
+      Linux-окружения.</details>
+    </div>
+  </div>
+
+  <div class="step">
+    <h2>git</h2>
+    <p class="theory">
+      <b>Теория.</b> <b>git</b> - система, которая хранит историю изменений файлов проекта: кто, что
+      и когда поменял, и позволяет вернуться к любому прежнему состоянию. Это базовый инструмент,
+      без которого дальше не будет ни одной главы. В Ubuntu внутри WSL он ставится через менеджер
+      пакетов (программу-установщик самой системы) двумя командами: сначала обновить список
+      доступных пакетов, потом поставить нужный. Существует и отдельный "Git for Windows" для
+      PowerShell - в этой книге он не понадобится: весь проект живёт внутри WSL, и все команды дальше
+      (включая git) мы даём именно из терминала Ubuntu, не из PowerShell.
+    </p>
+    <pre class="code-block">sudo apt update
+sudo apt install git</pre>
+    <p class="theory">
+      <code>sudo</code> означает "выполнить с правами администратора" - система спросит тот пароль,
+      который ты задал при установке Ubuntu. Разбор самого git, его логики и команд - следующая
+      глава; здесь только установка и проверка.
+    </p>
+    <div class="example">
+      <b>Пример.</b> Проверка - <code>git --version</code>. Формат вывода такой же короткий, как у
+      Docker: слово, слово, номер версии.
+    </div>
+    <div class="fake-terminal" data-terminal="git">
+      <div class="output"></div>
+      <div class="prompt-row"><span class="sym">$</span><input type="text" placeholder="введи команду..."></div>
+    </div>
+    <div class="quest">
+      <b>Задание.</b> Введи в тренажёре: <code>git --version</code>
+    </div>
+    <div class="hint-row">
+      <details class="hint"><summary>Подсказка</summary>Тот же приём проверки, что и с Docker -
+      меняется только название программы.</details>
+      <details class="solution"><summary>Показать разбор</summary><code>git version x.y.z</code> -
+      обрати внимание, git печатает "version" без слова "git version ...," с запятой, как Docker.
+      Формат вывода у каждой программы свой, единого стандарта тут нет.</details>
+    </div>
+  </div>
+
+  <div class="step">
+    <h2>VS Code и расширение WSL</h2>
+    <p class="theory">
+      <b>Теория.</b> Файлы проекта будут физически лежать <b>внутри</b> Linux-окружения, а не в
+      обычных папках Windows - так быстрее и так же, как на сервере. Проблема: у Windows и Linux
+      разные способы записывать путь к файлу (<code>C:\Users\Ivan</code> против
+      <code>/home/ivan</code>), и обычный редактор в этих путях легко запутается. Решение -
+      редактор <b>VS Code</b> плюс его официальное расширение <b>WSL</b>: редактор остаётся окном
+      Windows, но работает с файлами напрямую внутри Linux, теми же путями, что и терминал.
+    </p>
+    <div class="example">
+      <b>Пример.</b> Установил VS Code → в боковой панели Extensions нашёл расширение "WSL" →
+      установил → открыл терминал Ubuntu, зашёл в папку проекта и набрал <code>code .</code>
+      (точка = "текущая папка"). VS Code откроется, и в левом нижнем углу окна будет подпись вида
+      <code>WSL: Ubuntu</code> - признак того, что редактор работает в Linux, а не в Windows.
+    </div>
+    <div class="checklist" style="margin-top:12px">
+      <b>Проверь себя.</b> Почему держать файлы проекта внутри WSL и редактировать их через
+      расширение WSL - лучше, чем хранить их в <code>C:\Проекты</code> и открывать оттуда?
+      <details class="solution" style="margin-top:8px"><summary>Ответ</summary>Потому что дальше все
+      команды (git, Docker) выполняются в Linux. Если файлы лежат в Windows-папке, Linux видит их
+      через переходник: медленнее, и возможны странности с правами доступа и переносами строк.
+      Внутри WSL всё ведёт себя так же, как на настоящем сервере.</details>
+    </div>
+  </div>
+
+  <div class="step">
+    <h2>Итог: что теперь стоит на машине</h2>
+    <p class="theory">
+      <b>Теория.</b> Четыре вещи, и каждая отвечает за свою роль: WSL2 - линуксовое окружение,
+      похожее на сервер; Docker - упаковка программ в переносимые ящики; git - история изменений;
+      VS Code с расширением WSL - редактор, который видит файлы внутри Linux. Этого набора хватает,
+      чтобы в следующих главах начать собирать Демо Банк с нуля.
+    </p>
+  </div>
+
+  <div class="checklist">
+    <b>Ты понял тему, если можешь:</b>
+    <ul>
+      <li>объяснить своими словами, зачем на Windows 11 нужен Linux и что такое WSL2</li>
+      <li>сказать, какой командой в PowerShell (от администратора) ставится WSL и что произойдёт после неё</li>
+      <li>проверить командой, что дистрибутив работает именно на версии 2</li>
+      <li>объяснить, зачем в Docker Desktop включать интеграцию с WSL, и как убедиться, что она включена</li>
+      <li>назвать роль git и способ проверить, что он установлен</li>
+      <li>объяснить, почему файлы проекта лучше держать внутри WSL, а редактировать через расширение WSL в VS Code</li>
+    </ul>
+  </div>
+
+  <div class="done-row"><input type="checkbox" id="done-6"><label for="done-6">Глава пройдена</label></div>
+  <div class="nav" style="margin-top:24px"><a href="05-esli-ne-svoy-server.html">← к предыдущей теме</a><a href="07-git-i-komandy.html">дальше →</a></div>
+</div>
+
+<script>
+  var slug = 'gramotnost-kniga';
+  document.querySelectorAll('.done-row input[type="checkbox"]').forEach(function (cb) {
+    var saved = localStorage.getItem(slug + '-' + cb.id);
+    if (saved === 'true') cb.checked = true;
+    cb.addEventListener('change', function () { localStorage.setItem(slug + '-' + cb.id, cb.checked); });
+  });
+
+  var СЦЕНАРИИ = {
+    wsl: {
+      'wsl -l -v': '  NAME      STATE           VERSION\n* Ubuntu    Running         2',
+      'wsl --list --verbose': '  NAME      STATE           VERSION\n* Ubuntu    Running         2'
+    },
+    docker: {
+      'docker --version': 'Docker version x.y.z, build <короткий хеш сборки>',
+      'docker -v': 'Docker version x.y.z, build <короткий хеш сборки>'
+    },
+    git: {
+      'git --version': 'git version x.y.z'
+    }
+  };
+  document.querySelectorAll('.fake-terminal').forEach(function (term) {
+    var сценарий = СЦЕНАРИИ[term.dataset.terminal] || {};
+    var input = term.querySelector('input');
+    var output = term.querySelector('.output');
+    input.addEventListener('keydown', function (e) {
+      if (e.key !== 'Enter') return;
+      var команда = input.value.trim();
+      output.textContent += '$ ' + команда + '\n';
+      var ответ = сценарий[команда.toLowerCase()];
+      output.textContent += (ответ || 'команда не из этого шага - попробуй именно ту, что в задании') + '\n\n';
+      input.value = '';
+    });
+  });
+</script>
+</body>
+</html>

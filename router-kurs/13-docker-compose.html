@@ -1,0 +1,457 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Глава 13. Docker Compose - несколько контейнеров вместе</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>📦</text></svg>">
+<style>
+  :root {
+    --paper: #FFFFFF; --raised: #FFFFFF; --ink: #2B2B2B; --muted: #737373; --muted-2: #A3A3A3;
+    --line: #E4E4E4; --line-soft: #F0F0F0; --accent: #5C5C5C; --accent-bg: #ECECEC; --accent-line: #C6C6C6;
+    --pos: #1A7F4E; --pos-bg: #E4F3EA; --warn: #B5762A; --warn-bg: #FBF0E2;
+    --shadow-sm: 0 1px 2px rgba(24,32,22,0.04);
+    --shadow: 0 1px 2px rgba(24,32,22,0.04), 0 8px 22px -10px rgba(24,32,22,0.12);
+    --radius: 14px; --radius-sm: 9px;
+    --font-display: ui-serif, "Iowan Old Style", "Palatino Linotype", Georgia, serif;
+    --font-body: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+    --font-mono: ui-monospace, "SF Mono", "Cascadia Code", Consolas, monospace;
+    --space-2: 8px; --space-3: 12px; --space-4: 16px; --space-5: 24px;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--paper); color: var(--ink); font-family: var(--font-body);
+    font-size: 0.95rem; line-height: 1.55; }
+  .wrap { max-width: 680px; margin: 0 auto; padding: var(--space-5) var(--space-4) 80px; }
+  .nav { display: flex; justify-content: space-between; font-size: 0.85rem; margin-bottom: var(--space-4); }
+  .nav a { color: var(--accent); }
+  h1 { font-family: var(--font-display); font-size: 1.6rem; margin: 0 0 var(--space-2); }
+  h2 { font-size: 1.05rem; margin: var(--space-4) 0 var(--space-2); }
+  .theory { background: var(--accent-bg); border-radius: var(--radius-sm); padding: var(--space-3) var(--space-4);
+    font-size: 0.9rem; margin: var(--space-3) 0; }
+  .step { background: var(--raised); border: 1px solid var(--line); border-radius: var(--radius);
+    padding: var(--space-4); margin: var(--space-4) 0; box-shadow: var(--shadow-sm); }
+  .example { border-left: 3px solid var(--accent); padding: var(--space-2) var(--space-4); margin: var(--space-3) 0;
+    font-size: 0.9rem; color: var(--muted); }
+  .scope-note { background: #FFF4D6; border-radius: var(--radius-sm); padding: var(--space-3) var(--space-4);
+    font-size: 0.85rem; color: #7a5c10; margin: var(--space-4) 0; }
+  pre.code-block { background: var(--ink); color: #EDEDED; padding: var(--space-4); border-radius: var(--radius-sm);
+    font-family: var(--font-mono); font-size: 0.85rem; white-space: pre-wrap; margin: var(--space-3) 0; }
+  .fake-terminal { background: #1b1b1b; border-radius: var(--radius-sm); padding: var(--space-4);
+    font-family: var(--font-mono); font-size: 0.85rem; color: #d8d8d8; margin: var(--space-3) 0; }
+  .fake-terminal .output { white-space: pre-wrap; margin: var(--space-2) 0; min-height: 1.2em; }
+  .fake-terminal .prompt-row { display: flex; align-items: center; gap: var(--space-2); }
+  .fake-terminal .prompt-row span.sym { color: #6fcf6f; }
+  .fake-terminal input { background: transparent; border: none; color: #fff; font-family: var(--font-mono);
+    font-size: 0.85rem; flex: 1; outline: none; }
+  .quest { border-left: 3px solid var(--accent); padding: var(--space-2) var(--space-4); margin: var(--space-4) 0; }
+  details.hint, details.solution { border: 1px solid var(--line); border-radius: var(--radius-sm);
+    padding: var(--space-2) var(--space-3); margin-bottom: var(--space-2); font-size: 0.88rem; }
+  details.solution summary { color: var(--pos); font-weight: 600; }
+  .checklist { background: var(--pos-bg); border-radius: var(--radius-sm); padding: var(--space-4);
+    margin: var(--space-4) 0; font-size: 0.9rem; }
+  .checklist ul { margin: var(--space-2) 0 0; padding-left: var(--space-4); }
+  .done-row { display: flex; align-items: center; gap: var(--space-2); margin-top: var(--space-4);
+    padding-top: var(--space-3); border-top: 1px dashed var(--line); }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="nav"><a href="00-оглавление.html">← оглавление</a><span>Глава 13 из 33</span></div>
+  <h1>Docker Compose - несколько контейнеров вместе</h1>
+  <p style="color:var(--muted)">Один файл вместо пачки длинных <code>docker run</code>: приложение Демо Банка
+    и его база поднимаются вместе и знают, как найти друг друга.</p>
+
+  <div class="theory">
+    <b>Один технический момент сразу.</b> Команды ниже одинаковы в PowerShell на Windows 11 и в
+    терминале Mac/Linux, если установлен Docker Desktop и он запущен (значок кита в трее не
+    «Starting…»). Значок <code>$</code> печатать не нужно - это пометка «курсор готов». Файл
+    <code>docker-compose.yml</code> лежит в папке проекта, и команды набирают, находясь в этой
+    папке. Старые инструкции пишут <code>docker-compose</code> через дефис - это прежняя отдельная
+    программа. Сейчас в Docker Desktop та же идея вызывается с пробелом: <code>docker compose</code>.
+  </div>
+  <div class="theory">
+    <b>Как работает тренажёр ниже.</b> Это не настоящий терминал, а имитация: он понимает ровно ту
+    команду, что дана в задании, и отвечает заранее заготовленным текстом - так же, как в реальности
+    ответил бы Docker Compose, когда образы уже скачаны и собраны (главы 11-12). Ничего на твоём
+    компьютере он не запускает и не удаляет. Если наберёшь что-то другое, тренажёр не сломался -
+    в этом шаге отрабатывается конкретная команда.
+  </div>
+
+  <div class="step">
+    <h2>Два контейнера, которые нужны одновременно</h2>
+    <p class="theory">
+      <b>Теория.</b> Демо Банку мало одного контейнера. Нужно приложение (свой образ из Dockerfile,
+      глава 12) и база PostgreSQL (готовый образ, глава 11). Они должны оказаться в одной сети,
+      чтобы приложение достучалось до базы, и база должна стартовать не позже приложения. Каждый
+      <code>docker run</code> - это длинная строка флагов. Забыл флаг сети - контейнеры друг друга
+      не видят. Забыл пароль базы - Postgres сразу завершается. Забыл том с данными - после
+      остановки база пустая. Повторять это руками каждый запуск легко ошибиться.
+    </p>
+    <div class="example">
+      <b>Пример.</b> Тот же Демо Банк тремя отдельными командами. Сначала общая сеть, потом база,
+      потом приложение. Имена <code>--name</code> и <code>--network</code> надо не перепутать, а
+      порядок - не перепутать тем более: если запустить приложение раньше базы, первое подключение
+      не удастся.
+    </div>
+    <pre class="code-block">docker network create demobank
+docker run -d --name db --network demobank -e POSTGRES_PASSWORD=demo-secret -e POSTGRES_DB=demobank -v db_data:/var/lib/postgresql/data postgres:16
+docker run -d --name app --network demobank -p 8000:8000 -e DATABASE_URL=postgresql://postgres:demo-secret@db:5432/demobank demobank-app</pre>
+    <div class="checklist" style="margin-top:0">
+      <b>Проверь себя.</b> Почему здесь недостаточно просто два раза вызвать <code>docker run</code>
+      без <code>--network</code>?
+      <details class="solution" style="margin-top:8px"><summary>Ответ</summary>Каждый
+      <code>docker run</code> без общей сети сажает контейнер в свою изолированную сеть. Имя
+      <code>db</code> из приложения тогда никуда не ведёт: контейнеры не «соседи», даже если оба
+      запущены на одном Windows.</details>
+    </div>
+  </div>
+
+  <div class="step">
+    <h2>Один файл описывает весь проект</h2>
+    <p class="theory">
+      <b>Теория.</b> Docker Compose читает один текстовый файл - обычно
+      <code>docker-compose.yml</code> - и по нему сам создаёт сеть, тома и контейнеры. В файле
+      перечислены сервисы проекта. Слово «сервис» здесь не то, что в главе 1. Там служба - это
+      программа, которая работает в фоне Windows сама по себе. Здесь сервис - это просто один
+      пункт списка: «контейнер такого-то типа с такими-то настройками». У Демо Банка в списке два
+      сервиса: <code>app</code> и <code>db</code>.
+    </p>
+    <p class="theory">
+      <b>Теория.</b> Формат файла называется YAML. Это не язык программирования, а способ записать
+      структуру отступами. Правило то же, что у блоков в Python (глава 9): строка, сдвинутая вправо,
+      принадлежит строке выше. Сдвинул недостаточно - ключ стал чужим соседом, а не вложенной
+      настройкой. Пробелы и табы лучше не смешивать; в этом курсе везде два пробела на уровень.
+    </p>
+    <div class="example">
+      <b>Пример.</b> Мини-кусок, только чтобы увидеть отступ. <code>image</code> сдвинут относительно
+      <code>db</code>, значит образ относится к сервису db, а не ко всему файлу.
+    </div>
+    <pre class="code-block">services:
+  db:
+    image: postgres:16</pre>
+    <div class="checklist" style="margin-top:0">
+      <b>Проверь себя.</b> В Python строка внутри функции пишется с отступом, иначе это уже не тело
+      функции. Что будет аналогичной ошибкой в YAML, если пароль базы задуман как настройка сервиса
+      <code>db</code>?
+      <details class="solution" style="margin-top:8px"><summary>Ответ</summary>Пароль записан на том
+      же отступе, что и <code>db</code>, или сразу под ключом без дополнительного сдвига. Тогда он
+      не вложен в <code>db</code>. Compose либо не передаст пароль в Postgres, либо откажется
+      читать файл, потому что у сервиса появилось неизвестное поле.</details>
+    </div>
+  </div>
+
+  <div class="step">
+    <h2>Файл Демо Банка построчно</h2>
+    <p class="theory">
+      <b>Теория.</b> Ниже полный учебный файл. <code>image</code> - взять готовый образ (так берём
+      Postgres). <code>build: .</code> - собрать образ из Dockerfile в текущей папке (так берём
+      приложение, точка означает «эта папка»). <code>environment</code> - переменные окружения:
+      настройки, которые программа читает при старте, а не зашивает в код. Для официального образа
+      Postgres пароль обязателен, иначе контейнер сразу завершится с ошибкой. <code>ports</code>
+      пробрасывает порт наружу: слева порт на твоём Windows, справа порт внутри контейнера.
+      Базе такой проброс не нужен - к ней ходит только приложение, не браузер.
+    </p>
+    <p class="theory">
+      <b>Теория.</b> <code>volumes</code> - именованный том. Контейнер одноразовый: удалил контейнер -
+      исчезла его внутренняя файловая система. Том - отдельное хранилище Docker, как флешка, которую
+      не выбрасывают вместе с коробкой. Строка
+      <code>db_data:/var/lib/postgresql/data</code> говорит: флешку с именем <code>db_data</code>
+      подключить в то место внутри контейнера, где Postgres держит файлы базы. Путь слева от двоеточия
+      в этом виде - имя тома, не папка на диске C:. Путь справа - путь внутри Linux-контейнера, его
+      не надо переписывать в стиль Windows.
+    </p>
+    <div class="example">
+      <b>Пример.</b> Папка проекта на диске называется <code>demobank</code>. От этого имени Compose
+      потом назовёт контейнеры и том. Файл целиком:
+    </div>
+    <pre class="code-block">services:
+  db:
+    image: postgres:16
+    environment:
+      POSTGRES_PASSWORD: demo-secret
+      POSTGRES_DB: demobank
+    volumes:
+      - db_data:/var/lib/postgresql/data
+
+  app:
+    build: .
+    ports:
+      - "8000:8000"
+    depends_on:
+      - db
+    environment:
+      DATABASE_URL: postgresql://postgres:demo-secret@db:5432/demobank
+
+volumes:
+  db_data:</pre>
+    <p class="theory">
+      <b>Теория.</b> <code>depends_on</code> задаёт порядок: сервис <code>app</code> зависит от
+      сервиса <code>db</code>, поэтому Compose сначала запускает контейнер базы, потом контейнер
+      приложения. Нижний ключ <code>volumes:</code> на том же уровне, что и <code>services:</code>,
+      объявляет том <code>db_data</code>. Без этого объявления имя в секции <code>db</code> было бы
+      ссылкой в никуда.
+    </p>
+    <div class="scope-note">
+      Честная оговорка. <code>depends_on</code> ждёт только того, что контейнер <code>db</code>
+      запущен, а не того, что PostgreSQL уже принимает подключения. После старта контейнера база
+      ещё несколько секунд инициализируется. Учебный файл показывает порядок «сначала база», но
+      одной этой строчки мало: настоящее приложение Демо Банка должно повторить попытку подключения,
+      если первая не удалась. Иначе редкий быстрый старт будет выглядеть как «база сломалась», хотя
+      она просто ещё не готова.
+    </div>
+    <div class="checklist" style="margin-top:0">
+      <b>Проверь себя.</b> Что произойдёт со счетами Демо Банка, если у <code>db</code> убрать
+      <code>volumes</code>, затем остановить проект и поднять его снова?
+      <details class="solution" style="margin-top:8px"><summary>Ответ</summary>База будет пустой.
+      Файлы Postgres жили только внутри удалённого контейнера. Том как раз для того, чтобы они
+      пережили удаление контейнера.</details>
+    </div>
+  </div>
+
+  <div class="step">
+    <h2>Внутри проекта друг друга зовут по имени сервиса</h2>
+    <p class="theory">
+      <b>Теория.</b> Compose сам создаёт сеть проекта и записывает в ней имена сервисов. Из
+      контейнера <code>app</code> имя <code>db</code> - это адрес контейнера базы, порт 5432.
+      Поэтому в строке подключения написано <code>@db:5432</code>, а не <code>@localhost</code>.
+      <code>localhost</code> всегда значит «я сам». Внутри контейнера приложения «я сам» - это
+      приложение, а не база и не твой Windows. В браузере на Windows ты открываешь
+      <code>localhost:8000</code>, потому что порт 8000 проброшен наружу. База наружу не проброшена,
+      с Windows по имени <code>db</code> к ней не зайти - это имя существует только в сети Compose.
+    </p>
+    <div class="example">
+      <b>Пример.</b> Одна и та же база, два разных адреса. Приложение в контейнере:
+      <code>postgresql://postgres:demo-secret@db:5432/demobank</code>. Браузер на Windows, если бы
+      порт базы пробросили (в нашем файле мы этого не делаем): <code>localhost</code> и тот порт,
+      что стоит слева в <code>ports</code>. Путаница «пишу localhost, как в браузере» - самая частая
+      причина ошибки «connection refused» в первый день с Compose.
+    </div>
+    <div class="checklist" style="margin-top:0">
+      <b>Проверь себя.</b> Приложение Демо Банка не может подключиться к базе, в логе
+      «connection refused» на <code>localhost:5432</code>. Файл при этом поднимает оба контейнера.
+      Что исправить в <code>DATABASE_URL</code>?
+      <details class="solution" style="margin-top:8px"><summary>Ответ</summary>Заменить
+      <code>localhost</code> на имя сервиса <code>db</code>. Из контейнера приложения localhost -
+      это он сам, Postgres там не слушает.</details>
+    </div>
+  </div>
+
+  <div class="step">
+    <h2>Поднять, посмотреть, прочитать логи</h2>
+    <p class="theory">
+      <b>Теория.</b> <code>docker compose up</code> создаёт недостающее и запускает все сервисы из
+      файла. Без флага <code>-d</code> терминал остаётся приклеен к логам, пока не нажмёшь Ctrl+C
+      (это остановит и контейнеры). <code>docker compose up -d</code> делает то же самое и сразу
+      возвращает приглашение: <code>-d</code> значит detached, «в фоне». <code>docker compose ps</code>
+      показывает контейнеры этого проекта, не все контейнеры Docker на машине.
+      <code>docker compose logs</code> печатает логи всех сервисов и завершается.
+      <code>docker compose logs -f</code> не завершается, а следит за новыми строками, пока не
+      прервёшь. <code>docker compose logs db</code> - только один сервис. В тренажёрах ниже слежки
+      нет: имитация должна закончиться и вернуть курсор, как обычная команда без <code>-f</code>.
+    </p>
+    <div class="example">
+      <b>Пример.</b> Считаем, что образ <code>postgres:16</code> уже скачан в главе 11, а образ
+      приложения уже собран. Папка проекта - <code>demobank</code>, поэтому в выводе имена
+      <code>demobank-db-1</code> и <code>demobank-app-1</code>. Первый запуск создаёт сеть
+      <code>demobank_default</code>. Время в настоящем выводе будет другим, набор строк - тот же.
+    </div>
+    <div class="quest">
+      <b>Задание.</b> Подними проект в фоне: <code>docker compose up -d</code>
+    </div>
+    <div class="fake-terminal" data-terminal="up">
+      <div class="output"></div>
+      <div class="prompt-row"><span class="sym">$</span><input type="text" placeholder="введи команду..."></div>
+    </div>
+    <div class="hint-row">
+      <details class="hint"><summary>Подсказка</summary>Нужны три слова и флаг: compose, действие up, и <code>-d</code>. Без <code>-d</code> это другая команда, тренажёр этого шага ждёт фоновый запуск.</details>
+      <details class="solution"><summary>Показать разбор</summary>Compose создал сеть проекта и запустил оба контейнера. Галочки - это отчёт «сделано», не меню. Приглашение вернулось, потому что был флаг <code>-d</code>: контейнеры работают, а терминал свободен.</details>
+    </div>
+
+    <div class="quest">
+      <b>Задание.</b> Посмотри, что сейчас запущено в этом проекте: <code>docker compose ps</code>
+    </div>
+    <div class="fake-terminal" data-terminal="ps">
+      <div class="output"></div>
+      <div class="prompt-row"><span class="sym">$</span><input type="text" placeholder="введи команду..."></div>
+    </div>
+    <div class="hint-row">
+      <details class="hint"><summary>Подсказка</summary>Два слова: <code>docker compose ps</code>. Это не <code>docker ps</code> - та команда показала бы все контейнеры машины, а не только проект из текущего файла.</details>
+      <details class="solution"><summary>Показать разбор</summary>Оба сервиса в статусе Up. У app в колонке PORTS есть <code>0.0.0.0:8000-&gt;8000/tcp</code> - порт открыт на Windows. У db только <code>5432/tcp</code> без стрелки наружу: порт виден соседним контейнерам в сети Compose, но не браузеру. Колонка COMMAND у базы обрезана многоточием - так Compose укорачивает длинную команду старта, это не ошибка.</details>
+    </div>
+
+    <div class="quest">
+      <b>Задание.</b> Прочитай уже накопленные логи обоих сервисов: <code>docker compose logs</code>
+    </div>
+    <div class="example">
+      <b>Пример того, что считается честным выводом.</b> Строки с префиксом <code>db-1</code> -
+      типичные сообщения самого PostgreSQL и его скрипта первого запуска (том ещё пустой, поэтому
+      база инициализируется, а не пропускает инициализацию). Дата, номер процесса и точная версия
+      патча в живом Docker будут другими. Строки <code>app-1</code> - то, что печатает программа
+      Демо Банка; Compose только дописывает имя сервиса слева. Команда без <code>-f</code> печатает
+      накопленное и заканчивается.
+    </div>
+    <div class="fake-terminal" data-terminal="logs">
+      <div class="output"></div>
+      <div class="prompt-row"><span class="sym">$</span><input type="text" placeholder="введи команду..."></div>
+    </div>
+    <div class="hint-row">
+      <details class="hint"><summary>Подсказка</summary>Именно <code>docker compose logs</code>, без <code>-f</code> и без имени сервиса - в этом шаге смотрим оба сразу.</details>
+      <details class="solution"><summary>Показать разбор</summary>Префикс <code>db-1</code> / <code>app-1</code> Compose добавляет сам, чтобы логи двух контейнеров не смешались в кашу. Строка Postgres «database system is ready to accept connections» значит, что база уже слушает. Строка приложения про <code>db:5432</code> значит, что оно нашло базу по имени сервиса, а не по localhost. Если бы приложения стартовало раньше готовности Postgres, здесь была бы ошибка подключения - это как раз дыра, о которой предупреждал <code>depends_on</code>.</details>
+    </div>
+  </div>
+
+  <div class="step">
+    <h2>Остановить проект и не снести базу случайно</h2>
+    <p class="theory">
+      <b>Теория.</b> <code>docker compose down</code> останавливает и удаляет контейнеры этого
+      проекта и его сеть. Именованные тома он не трогает. Следующий <code>up</code> создаст новые
+      контейнеры и подключит ту же «флешку» - счета Демо Банка на месте. Это поведение по умолчанию,
+      отдельный флаг для «сохрани данные» не нужен.
+    </p>
+    <div class="quest">
+      <b>Задание.</b> Останови проект без удаления данных: <code>docker compose down</code>
+    </div>
+    <div class="fake-terminal" data-terminal="down">
+      <div class="output"></div>
+      <div class="prompt-row"><span class="sym">$</span><input type="text" placeholder="введи команду..."></div>
+    </div>
+    <div class="hint-row">
+      <details class="hint"><summary>Подсказка</summary>Без <code>-v</code> и без <code>-d</code>. <code>-d</code> относится к <code>up</code>, не к <code>down</code>.</details>
+      <details class="solution"><summary>Показать разбор</summary>В отчёте есть Container Removed и Network Removed. Строки Volume Removed нет - том <code>demobank_db_data</code> остался. Имя тома Compose собирает из имени папки проекта и имени тома в файле.</details>
+    </div>
+
+    <div class="scope-note">
+      Честное предупреждение, до команды. <code>docker compose down -v</code> удаляет и тома проекта.
+      Для Демо Банка это значит: учебные счета и операции исчезнут безвозвратно. Команда не
+      спрашивает «ты уверен?». Флаг короткий, его легко дописать по привычке из чужой инструкции
+      «чтобы очистить всё». Очистить контейнеры и очистить данные - разные действия. Тренажёр ниже
+      ничего на диске не сотрёт, но вывод покажет ту строку, из-за которой новички теряют базу.
+    </div>
+    <div class="quest">
+      <b>Задание.</b> Посмотри, чем опасный вариант отличается в отчёте. Введи именно
+      <code>docker compose down -v</code> - только в тренажёре.
+    </div>
+    <div class="fake-terminal" data-terminal="downv">
+      <div class="output"></div>
+      <div class="prompt-row"><span class="sym">$</span><input type="text" placeholder="введи команду..."></div>
+    </div>
+    <div class="hint-row">
+      <details class="hint"><summary>Подсказка</summary>Те же два слова, что в прошлом задании, плюс флаг <code>-v</code>. На своём компьютере эту форму не используй, пока сознательно не хочешь пустую базу.</details>
+      <details class="solution"><summary>Показать разбор</summary>Появилась строка Volume Removed для <code>demobank_db_data</code>. Именно она означает потерю файлов Postgres. Без <code>-v</code> этой строки не было. Контейнеры и сеть удаляются в обоих случаях; данные тома - только с <code>-v</code>.</details>
+    </div>
+    <div class="checklist" style="margin-top:12px">
+      <b>Проверь себя.</b> Хочешь остановить Демо Банк на ночь и завтра продолжить с теми же
+      учебными счетами. Какая команда?
+      <details class="solution" style="margin-top:8px"><summary>Ответ</summary><code>docker compose down</code>
+      без <code>-v</code>. Завтра снова <code>docker compose up -d</code> - том подключится к новому
+      контейнеру базы.</details>
+    </div>
+  </div>
+
+  <div class="step">
+    <h2>Найди ошибки в чужом файле</h2>
+    <p class="theory">
+      <b>Теория.</b> Файл ниже похож на рабочий, но Демо Банк с ним не поднимется как задумано.
+      Ошибок две: одна про отступы YAML, вторая про порядок старта. Сеть и адрес <code>db</code> в
+      строке подключения здесь уже правильные - не «чини» то, что не сломано.
+    </p>
+    <pre class="code-block">services:
+  db:
+    image: postgres:16
+    environment:
+    POSTGRES_PASSWORD: demo-secret
+    POSTGRES_DB: demobank
+    volumes:
+      - db_data:/var/lib/postgresql/data
+
+  app:
+    build: .
+    ports:
+      - "8000:8000"
+    environment:
+      DATABASE_URL: postgresql://postgres:demo-secret@db:5432/demobank
+
+volumes:
+  db_data:</pre>
+    <div class="quest">
+      <b>Задание.</b> Найди обе ошибки и сформулируй, как должен выглядеть исправленный фрагмент.
+      Сверься с разбором только после своей версии.
+    </div>
+    <div class="hint-row">
+      <details class="hint"><summary>Подсказка</summary>Сравни отступ <code>POSTGRES_PASSWORD</code> с отступом <code>image</code> и с рабочим файлом выше. Ключ <code>environment</code> без вложенных строк не передаёт Postgres ничего. Вторая ошибка - про то, чего в сервисе <code>app</code> нет, хотя в разобранном файле было.</details>
+      <details class="hint"><summary>Подсказка ещё</summary>Compose проверяет схему файла. Поле, которое стоит на уровне сервиса и не входит в список известных ключей, он отвергает. Пароль должен быть внутри <code>environment</code>, сдвинутый ещё на один уровень. Порядок старта задаёт <code>depends_on</code>.</details>
+      <details class="solution"><summary>Показать разбор</summary>
+        <p><code>POSTGRES_PASSWORD</code> и <code>POSTGRES_DB</code> стоят на том же отступе, что и
+        <code>environment</code>, поэтому они не внутри него, а рядом - как неизвестные поля сервиса
+        <code>db</code>. Такой файл Compose не принимает: дополнительное свойство
+        <code>POSTGRES_PASSWORD</code> у сервиса не разрешено. Даже если бы принял, официальный образ
+        не увидел бы пароль и завершился. Нужен сдвиг, как у вложенного блока в Python:</p>
+        <pre class="code-block">    environment:
+      POSTGRES_PASSWORD: demo-secret
+      POSTGRES_DB: demobank</pre>
+        <p>Вторая ошибка: у <code>app</code> нет <code>depends_on</code>. Контейнер приложения может
+        стартовать раньше контейнера базы. Это не замена повторам подключения в коде, но порядок
+        «сначала db» в файле должен быть:</p>
+        <pre class="code-block">    depends_on:
+      - db</pre>
+        <p>Строка <code>@db:5432</code> и том <code>db_data</code> здесь уже верные, их менять не надо.</p>
+      </details>
+    </div>
+  </div>
+
+  <div class="checklist">
+    <b>Ты понял тему, если можешь:</b>
+    <ul>
+      <li>объяснить, чем один <code>docker-compose.yml</code> удобнее пачки отдельных <code>docker run</code> для Демо Банка</li>
+      <li>сказать, что сервис в Compose - это пункт описания контейнера, а не служба Windows из главы 1, и почему отступ в YAML решает, кому принадлежит ключ</li>
+      <li>отличить <code>image</code> от <code>build</code> и объяснить, зачем базе именованный том</li>
+      <li>объяснить, почему приложение подключается к <code>db</code>, а браузер на Windows - к <code>localhost:8000</code></li>
+      <li>назвать <code>docker compose up -d</code>, <code>ps</code>, <code>logs</code>, <code>down</code> и сказать, что именно стирает флаг <code>-v</code></li>
+    </ul>
+  </div>
+
+  <div class="done-row"><input type="checkbox" id="done-13"><label for="done-13">Глава пройдена</label></div>
+  <div class="nav" style="margin-top:24px"><a href="12-docker-i-dockerfile.html">← назад</a><a href="14-ssh-i-polzovateli.html">дальше →</a></div>
+</div>
+
+<script>
+  var slug = 'gramotnost-kniga';
+  document.querySelectorAll('.done-row input[type="checkbox"]').forEach(function (cb) {
+    var saved = localStorage.getItem(slug + '-' + cb.id);
+    if (saved === 'true') cb.checked = true;
+    cb.addEventListener('change', function () { localStorage.setItem(slug + '-' + cb.id, cb.checked); });
+  });
+
+  var СЦЕНАРИИ = {
+    up: {
+      'docker compose up -d': '[+] Running 3/3\n ✔ Network demobank_default    Created                                    0.1s\n ✔ Container demobank-db-1     Started                                    0.5s\n ✔ Container demobank-app-1    Started                                    0.7s'
+    },
+    ps: {
+      'docker compose ps': 'NAME             IMAGE         COMMAND                  SERVICE   CREATED         STATUS         PORTS\ndemobank-app-1   demobank-app  "python app.py"          app       8 seconds ago   Up 6 seconds   0.0.0.0:8000->8000/tcp\ndemobank-db-1    postgres:16   "docker-entrypoint.s…"   db        8 seconds ago   Up 7 seconds   5432/tcp'
+    },
+    logs: {
+      'docker compose logs': 'db-1  | The files belonging to this database system will be owned by user "postgres".\ndb-1  | performing post-bootstrap initialization ... ok\ndb-1  | 2024-06-01 12:00:00.844 UTC [1] LOG:  listening on IPv4 address "0.0.0.0", port 5432\ndb-1  | 2024-06-01 12:00:01.142 UTC [1] LOG:  database system is ready to accept connections\napp-1 | Демо Банк слушает 0.0.0.0:8000\napp-1 | Демо Банк подключился к базе db:5432'
+    },
+    down: {
+      'docker compose down': '[+] Running 3/3\n ✔ Container demobank-app-1  Removed                                      0.4s\n ✔ Container demobank-db-1   Removed                                      0.3s\n ✔ Network demobank_default  Removed                                      0.1s'
+    },
+    downv: {
+      'docker compose down -v': '[+] Running 4/4\n ✔ Container demobank-app-1  Removed                                      0.4s\n ✔ Container demobank-db-1   Removed                                      0.2s\n ✔ Volume demobank_db_data   Removed                                      0.0s\n ✔ Network demobank_default  Removed                                      0.1s'
+    }
+  };
+  document.querySelectorAll('.fake-terminal').forEach(function (term) {
+    var сценарий = СЦЕНАРИИ[term.dataset.terminal] || {};
+    var input = term.querySelector('input');
+    var output = term.querySelector('.output');
+    input.addEventListener('keydown', function (e) {
+      if (e.key !== 'Enter') return;
+      var команда = input.value.trim();
+      output.textContent += '$ ' + команда + '\n';
+      var ответ = сценарий[команда.toLowerCase()];
+      output.textContent += (ответ || 'команда не из этого шага - попробуй именно ту, что в задании') + '\n\n';
+      input.value = '';
+    });
+  });
+</script>
+</body>
+</html>

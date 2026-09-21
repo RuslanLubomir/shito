@@ -1,0 +1,423 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Глава 11. База данных: миграции, бэкап и восстановление</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🗄️</text></svg>">
+<style>
+  :root {
+    --paper: #FFFFFF; --raised: #FFFFFF; --ink: #2B2B2B; --muted: #737373; --muted-2: #A3A3A3;
+    --line: #E4E4E4; --line-soft: #F0F0F0; --accent: #5C5C5C; --accent-bg: #ECECEC; --accent-line: #C6C6C6;
+    --pos: #1A7F4E; --pos-bg: #E4F3EA; --warn: #B5762A; --warn-bg: #FBF0E2;
+    --shadow-sm: 0 1px 2px rgba(24,32,22,0.04);
+    --shadow: 0 1px 2px rgba(24,32,22,0.04), 0 8px 22px -10px rgba(24,32,22,0.12);
+    --radius: 14px; --radius-sm: 9px;
+    --font-display: ui-serif, "Iowan Old Style", "Palatino Linotype", Georgia, serif;
+    --font-body: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+    --font-mono: ui-monospace, "SF Mono", "Cascadia Code", Consolas, monospace;
+    --space-2: 8px; --space-3: 12px; --space-4: 16px; --space-5: 24px;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--paper); color: var(--ink); font-family: var(--font-body);
+    font-size: 0.95rem; line-height: 1.55; }
+  .wrap { max-width: 680px; margin: 0 auto; padding: var(--space-5) var(--space-4) 80px; }
+  .nav { display: flex; justify-content: space-between; font-size: 0.85rem; margin-bottom: var(--space-4); }
+  .nav a { color: var(--accent); }
+  h1 { font-family: var(--font-display); font-size: 1.6rem; margin: 0 0 var(--space-2); }
+  h2 { font-size: 1.05rem; margin: var(--space-4) 0 var(--space-2); }
+  .theory { background: var(--accent-bg); border-radius: var(--radius-sm); padding: var(--space-3) var(--space-4);
+    font-size: 0.9rem; margin: var(--space-3) 0; }
+  .step { background: var(--raised); border: 1px solid var(--line); border-radius: var(--radius);
+    padding: var(--space-4); margin: var(--space-4) 0; box-shadow: var(--shadow-sm); }
+  .example { border-left: 3px solid var(--accent); padding: var(--space-2) var(--space-4); margin: var(--space-3) 0;
+    font-size: 0.9rem; color: var(--muted); }
+  .scope-note { background: #FFF4D6; border-radius: var(--radius-sm); padding: var(--space-3) var(--space-4);
+    font-size: 0.85rem; color: #7a5c10; margin: var(--space-4) 0; }
+  pre.code-block { background: var(--ink); color: #EDEDED; padding: var(--space-4); border-radius: var(--radius-sm);
+    font-family: var(--font-mono); font-size: 0.85rem; white-space: pre-wrap; margin: var(--space-3) 0; }
+  .fake-terminal { background: #1b1b1b; border-radius: var(--radius-sm); padding: var(--space-4);
+    font-family: var(--font-mono); font-size: 0.85rem; color: #d8d8d8; margin: var(--space-3) 0; }
+  .fake-terminal .output { white-space: pre-wrap; margin: var(--space-2) 0; min-height: 1.2em; }
+  .fake-terminal .prompt-row { display: flex; align-items: center; gap: var(--space-2); }
+  .fake-terminal .prompt-row span.sym { color: #6fcf6f; }
+  .fake-terminal input { background: transparent; border: none; color: #fff; font-family: var(--font-mono);
+    font-size: 0.85rem; flex: 1; outline: none; }
+  .quest { border-left: 3px solid var(--accent); padding: var(--space-2) var(--space-4); margin: var(--space-4) 0; }
+  details.hint, details.solution { border: 1px solid var(--line); border-radius: var(--radius-sm);
+    padding: var(--space-2) var(--space-3); margin-bottom: var(--space-2); font-size: 0.88rem; }
+  details.solution summary { color: var(--pos); font-weight: 600; }
+  .checklist { background: var(--pos-bg); border-radius: var(--radius-sm); padding: var(--space-4);
+    margin: var(--space-4) 0; font-size: 0.9rem; }
+  .checklist ul { margin: var(--space-2) 0 0; padding-left: var(--space-4); }
+  .done-row { display: flex; align-items: center; gap: var(--space-2); margin-top: var(--space-4);
+    padding-top: var(--space-3); border-top: 1px dashed var(--line); }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="nav"><a href="00-оглавление.html">← оглавление</a><span>Глава 11 из 33</span></div>
+  <h1>База данных: миграции, бэкап и восстановление</h1>
+  <p style="color:var(--muted)">Где Демо Банк хранит счёта и операции, и что делать, чтобы это
+    хранилище не потерялось вместе с ноутбуком.</p>
+
+  <div class="theory">
+    <b>Как работает тренажёр ниже.</b> Это имитация терминала: он понимает ровно те команды, что
+    даны в заданиях этой главы, и печатает тот ответ, который в реальности печатает настоящая
+    программа. Если ответа нет вовсе - так и написано словами: «команда ничего не выводит». Наберёшь
+    что-то другое - тренажёр не сломался, просто в этом шаге отрабатывается конкретная команда.
+  </div>
+
+  <div class="scope-note">
+    Честная оговорка про упрощение. Всё, что ниже - одна база данных на одной машине, пароль прямо
+    в команде запуска, бэкап в файл рядом. В реальном проде, где на одном сервере живут данные многих
+    клиентов, так не делают: там пароли лежат в хранилище секретов, бэкапы уходят в отдельное
+    хранилище по расписанию, у базы есть реплика (вторая копия, которая непрерывно повторяет за
+    основной), а доступ разграничен по пользователям. Мы осознанно строим учебный вариант - но
+    называем это учебным вариантом, а не «так и надо».
+  </div>
+
+  <div class="step">
+    <h2>Что такое реляционная база данных</h2>
+    <p class="theory">
+      <b>Теория.</b> Реляционная база данных - это набор таблиц: у каждой таблицы есть столбцы
+      (что именно мы храним: номер счёта, баланс) и строки (по одной на каждый счёт). Очень похоже
+      на несколько листов Excel, но с одним важным отличием: таблицы официально связаны между собой.
+      В таблице карт есть столбец «к какому счёту относится эта карта», и база сама следит, чтобы
+      там не оказалось номера счёта, которого не существует. Такое правило называется ограничение
+      целостности. Плюс база умеет принимать много запросов одновременно и не путаться: два перевода,
+      пришедшие в одну секунду, не перезапишут друг друга.
+    </p>
+    <div class="example">
+      <b>Пример.</b> Если хранить счёта Демо Банка в текстовом файле <code>accounts.txt</code>, то
+      при двух одновременных переводах две программы одновременно прочитают файл, обе посчитают
+      баланс от старого значения и обе его перезапишут - одна операция просто исчезнет. А ещё ничто
+      не помешает записать операцию на счёт №777, которого в файле нет. База данных обе эти беды
+      закрывает встроенно: первую - транзакциями (операция или проходит целиком, или не проходит
+      вовсе), вторую - связями между таблицами.
+    </div>
+    <div class="checklist" style="margin-top:12px">
+      <b>Проверь себя.</b> Почему для Демо Банка «просто файл с данными» - плохая идея, даже если
+      данных мало?
+      <details class="solution" style="margin-top:8px"><summary>Ответ</summary>Потому что файл не
+      умеет ни безопасно принимать одновременные изменения, ни проверять, что деньги списывают со
+      существующего счёта. Проблема не в объёме данных, а в одновременном доступе и целостности.</details>
+    </div>
+  </div>
+
+  <div class="step">
+    <h2>Запускаем PostgreSQL контейнером</h2>
+    <p class="theory">
+      <b>Теория.</b> PostgreSQL - это СУБД, то есть программа-сервер, которая хранит базы данных и
+      отвечает на запросы к ним. Ставить её на Windows вручную не обязательно: проще запустить готовый
+      образ в Docker (про Docker уже был разговор в главе 6, подробный разбор - в следующей главе).
+      В команде запуска важны три вещи: <code>-e POSTGRES_PASSWORD=...</code> задаёт пароль
+      администратора базы (без него образ postgres откажется стартовать), <code>-p 5432:5432</code>
+      пробрасывает порт наружу, чтобы к базе можно было подключиться со своей машины, а
+      <code>-d</code> означает «запусти в фоне и верни управление».
+    </p>
+    <div class="example">
+      <b>Пример.</b> Полная команда:
+      <pre class="code-block">docker run --name demobank-db -e POSTGRES_PASSWORD=secret -p 5432:5432 -d postgres</pre>
+      В ответ Docker печатает длинную строку из цифр и букв - это идентификатор созданного
+      контейнера, и больше ничего. Это и есть признак успеха: ошибок нет.
+    </div>
+    <div class="fake-terminal" data-terminal="run">
+      <div class="output"></div>
+      <div class="prompt-row"><span class="sym">$</span><input type="text" placeholder="введи команду..."></div>
+    </div>
+    <div class="quest">
+      <b>Задание.</b> Запусти базу: <code>docker run --name demobank-db -e POSTGRES_PASSWORD=secret -p 5432:5432 -d postgres</code>,
+      затем проверь, что контейнер жив: <code>docker ps</code>
+    </div>
+    <div class="hint-row">
+      <details class="hint"><summary>Подсказка</summary>Команду можно скопировать целиком. <code>docker ps</code> показывает только работающие контейнеры - если там пусто, контейнер упал.</details>
+      <details class="solution"><summary>Показать разбор</summary>Первая команда вернула идентификатор контейнера - значит, он создан и запущен в фоне. <code>docker ps</code> показал строку с образом <code>postgres</code>, статусом <code>Up</code> и проброшенным портом <code>0.0.0.0:5432-&gt;5432/tcp</code>. Теперь на порту 5432 твоей машины слушает настоящий PostgreSQL.</details>
+    </div>
+  </div>
+
+  <div class="step">
+    <h2>Подключение и создание базы для Демо Банка</h2>
+    <p class="theory">
+      <b>Теория.</b> <code>psql</code> - это консольный клиент PostgreSQL: программа, через которую
+      человек пишет запросы к базе. Он уже лежит внутри контейнера, поэтому вызываем его через
+      <code>docker exec</code> (выполнить команду внутри работающего контейнера). Флаг
+      <code>-U postgres</code> - под каким пользователем базы подключаемся, <code>-c "..."</code> -
+      выполнить один запрос и выйти. Одна СУБД может держать много отдельных баз, поэтому для
+      проекта создаём свою: <code>demobank</code>.
+    </p>
+    <div class="example">
+      <b>Пример.</b> На <code>CREATE DATABASE demobank;</code> PostgreSQL отвечает ровно одним
+      словом - <code>CREATE DATABASE</code>. Это не эхо твоей команды, а стандартный ответ сервера
+      «команда такого типа выполнена». У каждой SQL-команды такой ответ свой: <code>CREATE TABLE</code>,
+      <code>INSERT 0 1</code> и так далее.
+    </div>
+    <div class="fake-terminal" data-terminal="createdb">
+      <div class="output"></div>
+      <div class="prompt-row"><span class="sym">$</span><input type="text" placeholder="введи команду..."></div>
+    </div>
+    <div class="quest">
+      <b>Задание.</b> Создай базу: <code>docker exec -it demobank-db psql -U postgres -c "CREATE DATABASE demobank"</code>,
+      потом посмотри список баз: <code>docker exec -it demobank-db psql -U postgres -l</code>
+    </div>
+    <div class="hint-row">
+      <details class="hint"><summary>Подсказка</summary>Кавычки вокруг SQL-запроса обязательны, иначе оболочка разорвёт его по пробелам.</details>
+      <details class="solution"><summary>Показать разбор</summary>Первая команда ответила <code>CREATE DATABASE</code>. Вторая напечатала таблицу баз: <code>demobank</code>, <code>postgres</code> и две служебные <code>template0</code>/<code>template1</code> - они есть в любом свежем PostgreSQL, это шаблоны, из которых копируются новые базы.</details>
+    </div>
+  </div>
+
+  <div class="step">
+    <h2>Три таблицы Демо Банка</h2>
+    <p class="theory">
+      <b>Теория.</b> Схема - это описание того, какие таблицы есть и что в них за столбцы. Делаем
+      минимум, достаточный для демонстрации: <code>accounts</code> (счета), <code>cards</code>
+      (карты) и <code>transactions</code> (операции). <code>SERIAL PRIMARY KEY</code> - столбец
+      с автоматически растущим номером, уникальным для строки: по нему на строку можно ссылаться.
+      <code>REFERENCES accounts(id)</code> - и есть та самая связь: база не даст вставить карту с
+      номером счёта, которого нет. <code>NUMERIC(14,2)</code> - число с ровно двумя знаками после
+      запятой; для денег берут именно его, а не «дробное число вообще», чтобы копейки не плыли при
+      округлении.
+    </p>
+    <div class="example">
+      <b>Пример.</b> Готовый SQL:
+      <pre class="code-block">CREATE TABLE accounts (
+  id SERIAL PRIMARY KEY,
+  number TEXT UNIQUE NOT NULL,
+  balance NUMERIC(14,2) NOT NULL DEFAULT 0
+);
+
+CREATE TABLE cards (
+  id SERIAL PRIMARY KEY,
+  number TEXT UNIQUE NOT NULL,
+  account_id INTEGER NOT NULL REFERENCES accounts(id)
+);
+
+CREATE TABLE transactions (
+  id SERIAL PRIMARY KEY,
+  from_account INTEGER REFERENCES accounts(id),
+  to_account INTEGER REFERENCES accounts(id),
+  amount NUMERIC(14,2) NOT NULL,
+  created_at TIMESTAMP NOT NULL DEFAULT now()
+);</pre>
+      На каждую такую команду psql отвечает <code>CREATE TABLE</code> - и ничего больше.
+    </div>
+    <div class="fake-terminal" data-terminal="tables">
+      <div class="output"></div>
+      <div class="prompt-row"><span class="sym">$</span><input type="text" placeholder="введи команду..."></div>
+    </div>
+    <div class="quest">
+      <b>Задание.</b> Создай таблицу счетов одной командой:
+      <code>docker exec -it demobank-db psql -U postgres -d demobank -c "CREATE TABLE accounts (id SERIAL PRIMARY KEY, number TEXT UNIQUE NOT NULL, balance NUMERIC(14,2) NOT NULL DEFAULT 0)"</code>,
+      затем попробуй нарушить целостность:
+      <code>docker exec -it demobank-db psql -U postgres -d demobank -c "INSERT INTO cards (number, account_id) VALUES ('4111', 777)"</code>
+    </div>
+    <div class="hint-row">
+      <details class="hint"><summary>Подсказка</summary>Флаг <code>-d demobank</code> говорит, в какой именно базе выполнять запрос. Без него попадёшь в базу <code>postgres</code>.</details>
+      <details class="solution"><summary>Показать разбор</summary>Первая команда ответила <code>CREATE TABLE</code>. Вторая - ошибкой: база отказалась вставить карту, привязанную к несуществующему счёту №777, потому что такого <code>id</code> в <code>accounts</code> нет. Это и есть проверка целостности в действии - в текстовом файле такая запись прошла бы молча.</details>
+    </div>
+  </div>
+
+  <div class="step">
+    <h2>Миграции: изменения структуры файлами, а не руками</h2>
+    <p class="theory">
+      <b>Теория.</b> Миграция - это файл с SQL-изменениями структуры базы, у которого есть номер:
+      <code>001_create_accounts.sql</code>, <code>002_add_cards.sql</code>,
+      <code>003_add_currency.sql</code>. Инструмент миграций (их много: Flyway, Liquibase,
+      golang-migrate, Alembic) хранит в самой базе табличку «какие номера уже применены» и
+      применяет только новые, строго по порядку. Суть не в удобстве, а в повторяемости: те же самые
+      изменения, что ты применил у себя, автоматически применятся на тестовом и на боевом сервере -
+      и не надо вспоминать по памяти, «что я там менял руками две недели назад».
+    </p>
+    <div class="example">
+      <b>Пример.</b> Понадобилось хранить валюту счёта. Ты не заходишь в базу и не правишь таблицу
+      вручную, а создаёшь файл <code>003_add_currency.sql</code> со строкой
+      <code>ALTER TABLE accounts ADD COLUMN currency TEXT NOT NULL DEFAULT 'RUB';</code>, кладёшь
+      его в папку <code>migrations/</code> и коммитишь в git. На сервере при следующем развёртывании
+      миграция применится сама - и структура базы там станет ровно такой же, как у тебя. Ответ базы
+      на такую команду - <code>ALTER TABLE</code>.
+    </div>
+    <div class="fake-terminal" data-terminal="migrate">
+      <div class="output"></div>
+      <div class="prompt-row"><span class="sym">$</span><input type="text" placeholder="введи команду..."></div>
+    </div>
+    <div class="quest">
+      <b>Задание.</b> Примени «миграцию» вручную, чтобы увидеть, что внутри неё ничего магического:
+      <code>docker exec -it demobank-db psql -U postgres -d demobank -c "ALTER TABLE accounts ADD COLUMN currency TEXT NOT NULL DEFAULT 'RUB'"</code>
+    </div>
+    <div class="hint-row">
+      <details class="hint"><summary>Подсказка</summary>Миграция - это просто SQL в файле. Здесь мы выполняем тот же SQL напрямую, чтобы понять, что именно делает инструмент миграций.</details>
+      <details class="solution"><summary>Показать разбор</summary>Ответ - <code>ALTER TABLE</code>. Разница между этим и настоящей миграцией не в SQL, а в том, что при миграции этот SQL лежит в версионируемом файле с номером, и база помнит, что номер 003 уже применён - значит, второй раз он не выполнится и на сервере результат будет тот же.</details>
+    </div>
+    <div class="checklist" style="margin-top:12px">
+      <b>Проверь себя.</b> Ты добавил столбец руками у себя на ноутбуке, а на сервере забыл. Что
+      сломается и как миграции это предотвращают?
+      <details class="solution" style="margin-top:8px"><summary>Ответ</summary>Код, который ждёт
+      столбец <code>currency</code>, на сервере упадёт с ошибкой «столбца не существует». Миграции
+      предотвращают это тем, что изменение лежит в файле в репозитории и применяется на каждой
+      машине одинаково и автоматически.</details>
+    </div>
+  </div>
+
+  <div class="step">
+    <h2>Бэкап: pg_dump</h2>
+    <p class="theory">
+      <b>Теория.</b> <code>pg_dump</code> - штатная утилита PostgreSQL, которая выгружает базу в
+      файл: по умолчанию это обычный текст с SQL-командами, которые заново создадут таблицы и
+      вставят все строки. Знак <code>&gt;</code> в команде - перенаправление: то, что программа
+      напечатала бы на экран, уходит в файл. Важная деталь: при успехе <code>pg_dump</code> не
+      печатает <em>ничего</em> - ни «готово», ни процентов. Молчание и есть успех; убедиться можно,
+      посмотрев, что файл появился и не пустой.
+    </p>
+    <div class="example">
+      <b>Пример.</b> <code>docker exec demobank-db pg_dump -U postgres demobank &gt; backup.sql</code> -
+      и приглашение терминала просто возвращается. Дальше <code>ls -lh backup.sql</code> покажет
+      размер файла, а <code>head -3 backup.sql</code> - первые строки дампа со служебными
+      комментариями PostgreSQL.
+    </div>
+    <div class="scope-note">
+      Бэкап, который ни разу не восстанавливали, - это не бэкап, а иллюзия бэкапа. Файл может быть
+      обрезан, сделан не с той базы, зашифрован ключом, который потерян, - и выяснится это ровно в тот
+      момент, когда он нужен. Поэтому следующий шаг главы - не «сделали дамп», а «восстановили из
+      дампа и проверили данные».
+    </div>
+    <div class="fake-terminal" data-terminal="dump">
+      <div class="output"></div>
+      <div class="prompt-row"><span class="sym">$</span><input type="text" placeholder="введи команду..."></div>
+    </div>
+    <div class="quest">
+      <b>Задание.</b> Сделай бэкап и убедись, что файл не пустой:
+      <code>docker exec demobank-db pg_dump -U postgres demobank &gt; backup.sql</code>, затем
+      <code>ls -lh backup.sql</code> и <code>head -3 backup.sql</code>
+    </div>
+    <div class="hint-row">
+      <details class="hint"><summary>Подсказка</summary>Если после первой команды ничего не напечаталось - всё правильно. Проверяй результат не по выводу, а по файлу.</details>
+      <details class="solution"><summary>Показать разбор</summary><code>pg_dump</code> промолчал, <code>ls -lh</code> показал файл размером несколько килобайт, <code>head</code> - шапку дампа (<code>-- PostgreSQL database dump</code>). Три признака вместе означают, что файл реально создан и содержит SQL, а не пустоту из-за ошибки.</details>
+    </div>
+  </div>
+
+  <div class="step">
+    <h2>Восстановление: главное упражнение главы</h2>
+    <p class="theory">
+      <b>Теория.</b> Текстовый дамп восстанавливают, «скормив» его psql: <code>psql &lt; backup.sql</code> -
+      клиент просто выполняет команды из файла одну за другой, поэтому в выводе бегут строки
+      <code>CREATE TABLE</code>, <code>COPY 2</code>, <code>ALTER TABLE</code>. Дампы в бинарном
+      формате (сделанные с ключом <code>-Fc</code>) восстанавливают другой утилитой -
+      <code>pg_restore</code>. Восстанавливать надо в пустую базу: сначала удалить сломанную
+      (<code>DROP DATABASE</code>), потом создать заново (<code>CREATE DATABASE</code>), потом залить
+      дамп.
+    </p>
+    <div class="example">
+      <b>Пример.</b> Полный цикл «база сломалась»:
+      <pre class="code-block">docker exec -it demobank-db psql -U postgres -c "DROP DATABASE demobank"
+docker exec -it demobank-db psql -U postgres -c "CREATE DATABASE demobank"
+docker exec -i demobank-db psql -U postgres -d demobank &lt; backup.sql
+docker exec -it demobank-db psql -U postgres -d demobank -c "SELECT count(*) FROM accounts"</pre>
+      Последняя команда - и есть проверка: если число строк совпало с тем, что было до аварии,
+      бэкап рабочий.
+    </div>
+    <div class="fake-terminal" data-terminal="restore">
+      <div class="output"></div>
+      <div class="prompt-row"><span class="sym">$</span><input type="text" placeholder="введи команду..."></div>
+    </div>
+    <div class="quest">
+      <b>Задание (обязательное).</b> Проведи учебную аварию и восстановление по шагам:
+      <br>1) <code>docker exec -it demobank-db psql -U postgres -c "DROP DATABASE demobank"</code>
+      <br>2) <code>docker exec -it demobank-db psql -U postgres -c "CREATE DATABASE demobank"</code>
+      <br>3) <code>docker exec -i demobank-db psql -U postgres -d demobank &lt; backup.sql</code>
+      <br>4) <code>docker exec -it demobank-db psql -U postgres -d demobank -c "SELECT count(*) FROM accounts"</code>
+    </div>
+    <div class="hint-row">
+      <details class="hint"><summary>Подсказка</summary>На шаге 3 флаг <code>-i</code> (а не <code>-it</code>) обязателен: он оставляет открытым вход, через который в контейнер льётся содержимое файла.</details>
+      <details class="hint"><summary>Подсказка 2</summary>Если <code>DROP DATABASE</code> ругается, что база используется - закрой открытые к ней сессии psql; PostgreSQL не удаляет базу, к которой кто-то подключён.</details>
+      <details class="solution"><summary>Показать разбор</summary>Шаг 1 ответил <code>DROP DATABASE</code> - данных больше нет, авария смоделирована. Шаг 2 - <code>CREATE DATABASE</code>, пустая база готова. Шаг 3 напечатал поток ответов (<code>SET</code>, <code>CREATE TABLE</code>, <code>COPY 2</code>, <code>ALTER TABLE</code>) - это psql выполнял команды из файла. Шаг 4 показал <code>count = 2</code>, столько же счетов, сколько было до удаления. Вот теперь бэкап проверен - до шага 4 он был только предположением.</details>
+    </div>
+    <div class="checklist" style="margin-top:12px">
+      <b>Проверь себя.</b> Ты восстановил базу и psql не выдал ни одной ошибки. Достаточно ли этого,
+      чтобы считать бэкап проверенным?
+      <details class="solution" style="margin-top:8px"><summary>Ответ</summary>Нет. Отсутствие ошибок
+      говорит только о том, что SQL выполнился. Проверка - это сравнение данных: сколько строк в
+      таблицах, есть ли нужные счета и операции. Дамп полусуточной давности тоже восстановится без
+      ошибок, но потеряет всё, что было после.</details>
+    </div>
+  </div>
+
+  <div class="checklist">
+    <b>Ты понял тему, если можешь:</b>
+    <ul>
+      <li>объяснить своими словами, чем таблицы со связями лучше текстового файла для счетов и операций</li>
+      <li>запустить PostgreSQL контейнером и сказать, зачем в команде нужны <code>-e POSTGRES_PASSWORD</code>, <code>-p 5432:5432</code> и <code>-d</code></li>
+      <li>создать базу <code>demobank</code> и таблицу в ней через <code>psql -c</code>, зная, что в ответ придёт <code>CREATE DATABASE</code> / <code>CREATE TABLE</code></li>
+      <li>объяснить, что делает <code>REFERENCES accounts(id)</code> и почему вставка карты на несуществующий счёт падает</li>
+      <li>объяснить, что такое миграция и почему изменение структуры руками ломает сервер</li>
+      <li>сделать дамп через <code>pg_dump</code> и понимать, что молчание команды - это успех</li>
+      <li>восстановить базу из дампа (<code>psql &lt; backup.sql</code> или <code>pg_restore</code>) и проверить результат запросом к данным, а не по отсутствию ошибок</li>
+    </ul>
+  </div>
+
+  <div class="done-row"><input type="checkbox" id="done-11"><label for="done-11">Глава пройдена</label></div>
+  <div class="nav" style="margin-top:24px"><a href="10-demo-bank-chto-stroim.html">← назад</a><a href="12-docker-i-dockerfile.html">дальше →</a></div>
+</div>
+
+<script>
+  var slug = 'gramotnost-kniga';
+  document.querySelectorAll('.done-row input[type="checkbox"]').forEach(function (cb) {
+    var saved = localStorage.getItem(slug + '-' + cb.id);
+    if (saved === 'true') cb.checked = true;
+    cb.addEventListener('change', function () { localStorage.setItem(slug + '-' + cb.id, cb.checked); });
+  });
+
+  var СЦЕНАРИИ = {
+    run: {
+      'docker run --name demobank-db -e postgres_password=secret -p 5432:5432 -d postgres':
+        '9f4c1ba27d3e5a81c0b7e4f6a2d98351cb7d0e6f4a19b8c2d3e5f7a1b9c0d2e4',
+      'docker ps':
+        'CONTAINER ID   IMAGE      COMMAND                  CREATED         STATUS         PORTS                    NAMES\n9f4c1ba27d3e   postgres   "docker-entrypoint.s…"   4 seconds ago   Up 3 seconds   0.0.0.0:5432->5432/tcp   demobank-db'
+    },
+    createdb: {
+      'docker exec -it demobank-db psql -u postgres -c "create database demobank"': 'CREATE DATABASE',
+      'docker exec -it demobank-db psql -u postgres -l':
+        '                                  List of databases\n   Name    |  Owner   | Encoding |  Collate   |   Ctype    | Access privileges\n-----------+----------+----------+------------+------------+-----------------------\n demobank  | postgres | UTF8     | en_US.utf8 | en_US.utf8 |\n postgres  | postgres | UTF8     | en_US.utf8 | en_US.utf8 |\n template0 | postgres | UTF8     | en_US.utf8 | en_US.utf8 | =c/postgres +\n           |          |          |            |            | postgres=CTc/postgres\n template1 | postgres | UTF8     | en_US.utf8 | en_US.utf8 | =c/postgres +\n           |          |          |            |            | postgres=CTc/postgres\n(4 rows)'
+    },
+    tables: {
+      'docker exec -it demobank-db psql -u postgres -d demobank -c "create table accounts (id serial primary key, number text unique not null, balance numeric(14,2) not null default 0)"':
+        'CREATE TABLE',
+      'docker exec -it demobank-db psql -u postgres -d demobank -c "insert into cards (number, account_id) values (\'4111\', 777)"':
+        'ERROR:  insert or update on table "cards" violates foreign key constraint "cards_account_id_fkey"\nDETAIL:  Key (account_id)=(777) is not present in table "accounts".'
+    },
+    migrate: {
+      'docker exec -it demobank-db psql -u postgres -d demobank -c "alter table accounts add column currency text not null default \'rub\'"':
+        'ALTER TABLE'
+    },
+    dump: {
+      'docker exec demobank-db pg_dump -u postgres demobank > backup.sql':
+        '(команда ничего не выводит - при успехе pg_dump молчит)',
+      'ls -lh backup.sql':
+        '-rw-r--r-- 1 user user 3.2K Jan 14 12:41 backup.sql',
+      'head -3 backup.sql':
+        '--\n-- PostgreSQL database dump\n--'
+    },
+    restore: {
+      'docker exec -it demobank-db psql -u postgres -c "drop database demobank"': 'DROP DATABASE',
+      'docker exec -it demobank-db psql -u postgres -c "create database demobank"': 'CREATE DATABASE',
+      'docker exec -i demobank-db psql -u postgres -d demobank < backup.sql':
+        'SET\nSET\nSET\nSET\nCREATE TABLE\nALTER TABLE\nCREATE TABLE\nALTER TABLE\nCREATE TABLE\nALTER TABLE\nCOPY 2\nCOPY 1\nCOPY 1\nALTER TABLE\nALTER TABLE\nALTER TABLE',
+      'docker exec -it demobank-db psql -u postgres -d demobank -c "select count(*) from accounts"':
+        ' count\n-------\n     2\n(1 row)'
+    }
+  };
+  document.querySelectorAll('.fake-terminal').forEach(function (term) {
+    var сценарий = СЦЕНАРИИ[term.dataset.terminal] || {};
+    var input = term.querySelector('input');
+    var output = term.querySelector('.output');
+    input.addEventListener('keydown', function (e) {
+      if (e.key !== 'Enter') return;
+      var команда = input.value.trim();
+      output.textContent += '$ ' + команда + '\n';
+      var ответ = сценарий[команда.toLowerCase()];
+      output.textContent += (ответ || 'команда не из этого шага - попробуй именно ту, что в задании') + '\n\n';
+      input.value = '';
+    });
+  });
+</script>
+</body>
+</html>

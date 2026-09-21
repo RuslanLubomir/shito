@@ -1,0 +1,219 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Глава 1. Что такое терминал и команда</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>⌨️</text></svg>">
+<style>
+  :root {
+    --paper: #FFFFFF; --raised: #FFFFFF; --ink: #2B2B2B; --muted: #737373; --muted-2: #A3A3A3;
+    --line: #E4E4E4; --line-soft: #F0F0F0; --accent: #5C5C5C; --accent-bg: #ECECEC; --accent-line: #C6C6C6;
+    --pos: #1A7F4E; --pos-bg: #E4F3EA;
+    --shadow-sm: 0 1px 2px rgba(24,32,22,0.04);
+    --shadow: 0 1px 2px rgba(24,32,22,0.04), 0 8px 22px -10px rgba(24,32,22,0.12);
+    --radius: 14px; --radius-sm: 9px;
+    --font-display: ui-serif, "Iowan Old Style", "Palatino Linotype", Georgia, serif;
+    --font-body: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+    --font-mono: ui-monospace, "SF Mono", "Cascadia Code", Consolas, monospace;
+    --space-2: 8px; --space-3: 12px; --space-4: 16px; --space-5: 24px;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--paper); color: var(--ink); font-family: var(--font-body);
+    font-size: 0.95rem; line-height: 1.55; }
+  .wrap { max-width: 680px; margin: 0 auto; padding: var(--space-5) var(--space-4) 80px; }
+  .nav { display: flex; justify-content: space-between; font-size: 0.85rem; margin-bottom: var(--space-4); }
+  .nav a { color: var(--accent); }
+  h1 { font-family: var(--font-display); font-size: 1.6rem; margin: 0 0 var(--space-2); }
+  h2 { font-size: 1.05rem; margin: var(--space-4) 0 var(--space-2); }
+  .theory { background: var(--accent-bg); border-radius: var(--radius-sm); padding: var(--space-3) var(--space-4);
+    font-size: 0.9rem; margin: var(--space-3) 0; }
+  .pedagogy { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-3); margin: var(--space-4) 0; }
+  @media (max-width: 560px) { .pedagogy { grid-template-columns: 1fr; } }
+  .pedagogy .card { background: var(--raised); border: 1px solid var(--line); border-radius: var(--radius-sm);
+    padding: var(--space-3); font-size: 0.85rem; }
+  .pedagogy .card strong { display: block; margin-bottom: 4px; }
+  .step { background: var(--raised); border: 1px solid var(--line); border-radius: var(--radius);
+    padding: var(--space-4); margin: var(--space-4) 0; box-shadow: var(--shadow-sm); }
+  pre.code-block { background: var(--ink); color: #EDEDED; padding: var(--space-4); border-radius: var(--radius-sm);
+    font-family: var(--font-mono); font-size: 0.85rem; white-space: pre-wrap; margin: var(--space-3) 0; }
+  .fake-terminal { background: #1b1b1b; border-radius: var(--radius-sm); padding: var(--space-4);
+    font-family: var(--font-mono); font-size: 0.85rem; color: #d8d8d8; margin: var(--space-3) 0; }
+  .fake-terminal .output { white-space: pre-wrap; margin: var(--space-2) 0; min-height: 1.2em; }
+  .fake-terminal .prompt-row { display: flex; align-items: center; gap: var(--space-2); }
+  .fake-terminal .prompt-row span.sym { color: #6fcf6f; }
+  .fake-terminal input { background: transparent; border: none; color: #fff; font-family: var(--font-mono);
+    font-size: 0.85rem; flex: 1; outline: none; }
+  .quest { border-left: 3px solid var(--accent); padding: var(--space-2) var(--space-4); margin: var(--space-4) 0; }
+  details.hint, details.solution { border: 1px solid var(--line); border-radius: var(--radius-sm);
+    padding: var(--space-2) var(--space-3); margin-bottom: var(--space-2); font-size: 0.88rem; }
+  details.solution summary { color: var(--pos); font-weight: 600; }
+  .checklist { background: var(--pos-bg); border-radius: var(--radius-sm); padding: var(--space-4);
+    margin: var(--space-4) 0; font-size: 0.9rem; }
+  .checklist ul { margin: var(--space-2) 0 0; padding-left: var(--space-4); }
+  .done-row { display: flex; align-items: center; gap: var(--space-2); margin-top: var(--space-4);
+    padding-top: var(--space-3); border-top: 1px dashed var(--line); }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="nav"><a href="00-оглавление.html">← оглавление</a><span>Глава 1 из 33</span></div>
+  <h1>Что такое терминал и команда</h1>
+  <p style="color:var(--muted)">Про то, как вообще устроено общение человека с компьютером, кроме
+    мышки и кнопок.</p>
+
+  <div class="theory">
+    <b>Один технический момент сразу.</b> Терминал есть на любом компьютере (Windows, Mac, Linux),
+    выглядит чуть по-разному, но работает по одному и тому же принципу. Значок <code>$</code> перед
+    командой в этой главе - это не то, что нужно печатать самому, это просто пометка "здесь курсор
+    готов принять команду", как курсор мигает в текстовом поле. Сами команды и пути к файлам в этой
+    книге записаны в стиле Mac/Linux - в Windows терминал называется иначе (PowerShell или
+    командная строка) и записывается чуть по-другому, но сама идея - написать команду словами вместо
+    клика - та же самая.
+  </div>
+  <div class="theory">
+    <b>Как работает тренажёр ниже.</b> Это не настоящий терминал, а имитация: он понимает ровно ту
+    команду, что дана в задании, и отвечает заранее заготовленным текстом - так же, как в реальности
+    ответил бы компьютер. Если наберёшь что-то другое, тренажёр не сломался, просто в этом шаге
+    отрабатывается конкретная команда - попробуй именно её.
+  </div>
+
+  <div class="pedagogy">
+    <div class="card"><strong>Советская школа (Выготский, Гальперин)</strong>Сначала показываем готовое действие целиком, потом по шагам, потом сам.</div>
+    <div class="card"><strong>Свеллер, worked example</strong>Перед заданием - разобранный пример, не наоборот.</div>
+    <div class="card"><strong>Западная когнитивная наука (Родигер, Карпике, Эрикссон)</strong>Сделать самому закрепляет сильнее, чем прочитать.</div>
+    <div class="card"><strong>Японская школа (метод Кумон)</strong>Готовое решение открыто рядом - сверка, не списывание.</div>
+    <div class="card"><strong>Блум, mastery learning</strong>Есть чек-лист самопроверки перед тем, как идти дальше.</div>
+  </div>
+
+  <div class="step">
+    <h2>Два способа разговаривать с компьютером</h2>
+    <p class="theory">
+      <b>Теория.</b> Обычно ты нажимаешь на картинки - иконки, кнопки, меню. Это называется
+      графический интерфейс (сокращённо GUI): компьютер заранее нарисовал все варианты, а ты просто
+      тыкаешь в нужный. Терминал - это другой способ: ты пишешь компьютеру команду словами (точнее,
+      короткими условными словами), а он её выполняет. Не потому что это круче или "для гиков" - а
+      потому что некоторые вещи проще и быстрее сказать, чем нарисовать для этого отдельную кнопку.
+    </p>
+    <div class="theory">
+      <b>Простое правило на весь курс.</b> Если для действия есть понятная кнопка - используй кнопку.
+      Терминал - когда кнопки для нужного действия нет или объяснить словами реально быстрее.
+      Терминал не заменяет обычный интерфейс, он с ним соседствует.
+    </div>
+  </div>
+
+  <div class="step">
+    <h2>Из чего состоит команда</h2>
+    <p class="theory">
+      <b>Теория.</b> Команда - это одно слово-действие, например <code>ls</code> (показать список
+      файлов в текущей папке). После названия команды через пробел можно дописать аргументы -
+      уточнения, к чему именно применить действие. Например, <code>ls документы</code> - действие
+      "показать список", аргумент "документы": посмотреть, что лежит именно в этой папке, а не в
+      текущей.
+    </p>
+    <p><b>Разобранный пример.</b> "Текущая папка" - это та папка, в которой ты сейчас находишься в
+      терминале, примерно как быть открытым внутри конкретной папки в проводнике. Если ввести просто
+      <code>ls</code> без аргумента, команда покажет список файлов именно там, без уточнения, какую
+      папку смотреть.</p>
+    <div class="fake-terminal" data-terminal="ls">
+      <div class="output"></div>
+      <div class="prompt-row"><span class="sym">$</span><input type="text" placeholder="введи команду..."></div>
+    </div>
+    <div class="quest">
+      <b>Задание.</b> Введи в тренажёре и нажми Enter: <code>ls</code>
+    </div>
+    <div class="hint-row">
+      <details class="hint"><summary>Подсказка</summary>Просто набери три буквы и нажми Enter - без аргументов команда покажет то, что лежит "здесь".</details>
+      <details class="solution"><summary>Показать разбор</summary>Команда напечатала список того, что лежит в текущей папке - ровно то же самое, что ты увидел бы, дважды кликнув по этой же папке в проводнике, только текстом вместо иконок.</details>
+    </div>
+    <div class="checklist" style="margin-top:12px">
+      <b>Проверь себя.</b> Ты хочешь посмотреть не текущую папку, а конкретно "фото". Как будет
+      выглядеть команда с аргументом?
+      <details class="solution" style="margin-top:8px"><summary>Ответ</summary><code>ls фото</code> -
+      действие "показать список", аргумент "фото".</details>
+    </div>
+  </div>
+
+  <div class="step">
+    <h2>Файлы и папки - не только то, что видно на рабочем столе</h2>
+    <p class="theory">
+      <b>Теория.</b> Всё, с чем работает компьютер - документы, фотографии, настройки программ -
+      физически лежит в файлах, а файлы разложены по папкам, как бумаги по вложенным друг в друга
+      коробкам. Рабочий стол - это просто ОДНА конкретная папка, которую тебе показывают по умолчанию,
+      а не "всё, что есть в компьютере". В терминале до любого файла добираются, называя путь -
+      цепочку папок через косую черту, например <code>/home/user/документы/файл.txt</code>.
+    </p>
+  </div>
+
+  <div class="step">
+    <h2>Программа, которую ты запустил, и служба, которая работает сама</h2>
+    <p class="theory">
+      <b>Теория.</b> Когда открываешь калькулятор и через минуту закрываешь - он работает только
+      это время, между открытием и закрытием. Но часть программ работает всё время, в фоне, даже
+      когда ты вообще ни на что не смотришь - например, программа, которая автоматически проверяет
+      обновления, или антивирус, который сканирует файлы в фоне. Такую постоянно работающую программу
+      называют службой (service). Разница важна: "я запустил программу" и "у меня работает служба" -
+      это про разные вещи, и они по-разному включаются/выключаются.
+    </p>
+    <div class="checklist" style="margin-top:0">
+      <b>Проверь себя.</b> Антивирус, который сканирует файлы, пока ты просто работаешь и ничего
+      специально не запускал - это программа или служба?
+      <details class="solution" style="margin-top:8px"><summary>Ответ</summary>Служба - она работает в фоне сама, без того, чтобы ты каждый раз её "открывал".</details>
+    </div>
+  </div>
+
+  <div class="step">
+    <h2>Одно правило безопасности</h2>
+    <p class="theory">
+      <b>Теория.</b> Терминал не спрашивает "ты уверен?" почти никогда - он просто делает то, что ты
+      написал, даже если это удалит что-то важное. Поэтому если где-то (на форуме, в чужой инструкции)
+      видишь команду, которую не понимаешь - разумно сначала спросить/поискать, что она делает, а не
+      вставлять и запускать вслепую. Это не про то, что терминал опасен сам по себе - опасно делать
+      в нём то, чего не понимаешь, ровно как и с любым другим инструментом.
+    </p>
+  </div>
+
+  <div class="checklist">
+    <b>Ты понял тему, если можешь:</b>
+    <ul>
+      <li>объяснить своими словами разницу между графическим интерфейсом и терминалом</li>
+      <li>сказать, что такое команда и что такое аргумент команды</li>
+      <li>объяснить, чем "путь к файлу" отличается от значка на рабочем столе</li>
+      <li>сказать своими словами, чем программа отличается от службы</li>
+      <li>сказать, почему не стоит вставлять в терминал непонятную команду с форума</li>
+    </ul>
+  </div>
+
+  <div class="done-row"><input type="checkbox" id="done-1"><label for="done-1">Глава пройдена</label></div>
+  <div class="nav" style="margin-top:24px"><a href="00-оглавление.html">← оглавление</a><a href="02-kak-ustroena-set.html">дальше →</a></div>
+</div>
+
+<script>
+  var slug = 'gramotnost-kniga';
+  document.querySelectorAll('.done-row input[type="checkbox"]').forEach(function (cb) {
+    var saved = localStorage.getItem(slug + '-' + cb.id);
+    if (saved === 'true') cb.checked = true;
+    cb.addEventListener('change', function () { localStorage.setItem(slug + '-' + cb.id, cb.checked); });
+  });
+
+  var СЦЕНАРИИ = {
+    ls: {
+      'ls': 'документы\nфото\nзагрузки\nотчёт.txt'
+    }
+  };
+  document.querySelectorAll('.fake-terminal').forEach(function (term) {
+    var сценарий = СЦЕНАРИИ[term.dataset.terminal] || {};
+    var input = term.querySelector('input');
+    var output = term.querySelector('.output');
+    input.addEventListener('keydown', function (e) {
+      if (e.key !== 'Enter') return;
+      var команда = input.value.trim();
+      output.textContent += '$ ' + команда + '\n';
+      var ответ = сценарий[команда.toLowerCase()];
+      output.textContent += (ответ || 'команда не из этого шага - попробуй именно ту, что в задании') + '\n\n';
+      input.value = '';
+    });
+  });
+</script>
+</body>
+</html>

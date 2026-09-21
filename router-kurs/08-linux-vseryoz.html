@@ -1,0 +1,527 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Глава 8. Linux и терминал всерьёз (через WSL2)</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🐧</text></svg>">
+<style>
+  :root {
+    --paper: #FFFFFF; --raised: #FFFFFF; --ink: #2B2B2B; --muted: #737373; --muted-2: #A3A3A3;
+    --line: #E4E4E4; --line-soft: #F0F0F0; --accent: #5C5C5C; --accent-bg: #ECECEC; --accent-line: #C6C6C6;
+    --pos: #1A7F4E; --pos-bg: #E4F3EA; --warn: #B5762A; --warn-bg: #FBF0E2;
+    --shadow-sm: 0 1px 2px rgba(24,32,22,0.04);
+    --shadow: 0 1px 2px rgba(24,32,22,0.04), 0 8px 22px -10px rgba(24,32,22,0.12);
+    --radius: 14px; --radius-sm: 9px;
+    --font-display: ui-serif, "Iowan Old Style", "Palatino Linotype", Georgia, serif;
+    --font-body: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+    --font-mono: ui-monospace, "SF Mono", "Cascadia Code", Consolas, monospace;
+    --space-2: 8px; --space-3: 12px; --space-4: 16px; --space-5: 24px;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--paper); color: var(--ink); font-family: var(--font-body);
+    font-size: 0.95rem; line-height: 1.55; }
+  .wrap { max-width: 680px; margin: 0 auto; padding: var(--space-5) var(--space-4) 80px; }
+  .nav { display: flex; justify-content: space-between; font-size: 0.85rem; margin-bottom: var(--space-4); }
+  .nav a { color: var(--accent); }
+  h1 { font-family: var(--font-display); font-size: 1.6rem; margin: 0 0 var(--space-2); }
+  h2 { font-size: 1.05rem; margin: var(--space-4) 0 var(--space-2); }
+  .theory { background: var(--accent-bg); border-radius: var(--radius-sm); padding: var(--space-3) var(--space-4);
+    font-size: 0.9rem; margin: var(--space-3) 0; }
+  .step { background: var(--raised); border: 1px solid var(--line); border-radius: var(--radius);
+    padding: var(--space-4); margin: var(--space-4) 0; box-shadow: var(--shadow-sm); }
+  .example { border-left: 3px solid var(--accent); padding: var(--space-2) var(--space-4); margin: var(--space-3) 0;
+    font-size: 0.9rem; color: var(--muted); }
+  .scope-note { background: #FFF4D6; border-radius: var(--radius-sm); padding: var(--space-3) var(--space-4);
+    font-size: 0.85rem; color: #7a5c10; margin: var(--space-4) 0; }
+  pre.code-block { background: var(--ink); color: #EDEDED; padding: var(--space-4); border-radius: var(--radius-sm);
+    font-family: var(--font-mono); font-size: 0.85rem; white-space: pre-wrap; margin: var(--space-3) 0; }
+  .fake-terminal { background: #1b1b1b; border-radius: var(--radius-sm); padding: var(--space-4);
+    font-family: var(--font-mono); font-size: 0.85rem; color: #d8d8d8; margin: var(--space-3) 0; }
+  .fake-terminal .output { white-space: pre-wrap; margin: var(--space-2) 0; min-height: 1.2em; }
+  .fake-terminal .prompt-row { display: flex; align-items: center; gap: var(--space-2); }
+  .fake-terminal .prompt-row span.sym { color: #6fcf6f; }
+  .fake-terminal input { background: transparent; border: none; color: #fff; font-family: var(--font-mono);
+    font-size: 0.85rem; flex: 1; outline: none; }
+  .quest { border-left: 3px solid var(--accent); padding: var(--space-2) var(--space-4); margin: var(--space-4) 0; }
+  details.hint, details.solution { border: 1px solid var(--line); border-radius: var(--radius-sm);
+    padding: var(--space-2) var(--space-3); margin-bottom: var(--space-2); font-size: 0.88rem; }
+  details.solution summary { color: var(--pos); font-weight: 600; }
+  .checklist { background: var(--pos-bg); border-radius: var(--radius-sm); padding: var(--space-4);
+    margin: var(--space-4) 0; font-size: 0.9rem; }
+  .checklist ul { margin: var(--space-2) 0 0; padding-left: var(--space-4); }
+  .done-row { display: flex; align-items: center; gap: var(--space-2); margin-top: var(--space-4);
+    padding-top: var(--space-3); border-top: 1px dashed var(--line); }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="nav"><a href="00-оглавление.html">← оглавление</a><span>Глава 8 из 33</span></div>
+  <h1>Linux и терминал всерьёз (через WSL2)</h1>
+  <p style="color:var(--muted)">В главе 1 мы только заглянули в терминал. Теперь - по-настоящему,
+    потому что сервер Демо Банка и практически вся индустрия живут на Linux, а не на Windows.</p>
+
+  <div class="theory">
+    <b>Где это запускать.</b> WSL2 мы уже поставили в главе 6 (<code>wsl --install</code>) - открой
+    то же самое приложение <b>Ubuntu</b> из меню "Пуск", в котором мы проверяли версии git и Docker.
+    Все команды этой главы - в нём, а не в PowerShell: PowerShell - терминал Windows, у него другие
+    команды.
+  </div>
+  <div class="theory">
+    <b>Как работает тренажёр ниже.</b> Это имитация: она понимает ровно те команды, что даны в
+    заданиях, и печатает заранее заготовленный, но правдоподобный вывод - примерно такой же, какой
+    ты увидишь в настоящей Ubuntu. Наберёшь что-то другое - тренажёр не сломался, просто в этом шаге
+    отрабатывается конкретная команда.
+  </div>
+
+  <div class="scope-note">
+    Честная оговорка про упрощения. Дальше в курсе будет сервер Демо Банка, и в учебном виде мы
+    почти всегда работаем как единственный человек на машине: один пользователь, одна служба, логи
+    смотрим глазами. В реальном продакшене на одном сервере обычно живут несколько клиентов или
+    несколько окружений, у каждого - свой отдельный пользователь и строго ограниченные права, логи
+    уезжают в отдельную систему сбора, а руками в файлы никто не лазит. Поэтому команды вроде
+    <code>sudo nano /etc/...</code>, которые здесь выглядят обыденно, в настоящей эксплуатации
+    делаются не вручную. Про это будет отдельная глава; сейчас важно понять сами механизмы.
+  </div>
+
+  <div class="step">
+    <h2>1. Файловая система: одно дерево от корня</h2>
+    <p class="theory">
+      <b>Теория.</b> В Windows ты привык к дискам: <code>C:\</code>, <code>D:\</code> - несколько
+      отдельных "корней". В Linux дисков-букв нет вообще. Есть один корень, он обозначается косой
+      чертой <code>/</code>, и всё остальное - ветки одного дерева. Флешку или второй диск не
+      "открывают как диск E:", а <b>монтируют</b> - подключают в какую-то папку внутри этого дерева,
+      например в <code>/mnt/usb</code>, и дальше работают с ней как с обычной папкой. Важные ветки,
+      которые встретятся в курсе постоянно: <code>/home</code> - домашние папки пользователей (твои
+      личные файлы, аналог <code>C:\Users</code>), <code>/etc</code> - настройки программ (текстовые
+      файлы конфигурации), <code>/var</code> - изменяющиеся данные, в частности логи в
+      <code>/var/log</code>, <code>/usr</code> - сами установленные программы, <code>/tmp</code> -
+      временные файлы, которые никто не обещает сохранить.
+    </p>
+    <div class="example">
+      <b>Пример.</b> Путь <code>/home/anton/проект/app.py</code> читается справа налево так: файл
+      <code>app.py</code> лежит в папке <code>проект</code>, которая лежит в домашней папке
+      пользователя <code>anton</code>, которая лежит в <code>/home</code>, а та - прямо в корне.
+      Никакой буквы диска в начале нет и быть не может. Кстати, в WSL2 твой диск C: тоже виден -
+      он смонтирован в <code>/mnt/c</code>, ровно по тому же принципу.
+    </div>
+    <p><b>Разобранный пример.</b> Команда <code>ls /</code> печатает содержимое корня - список тех
+      самых верхних папок. Команда <code>pwd</code> (print working directory) печатает, где ты
+      сейчас находишься.</p>
+    <div class="fake-terminal" data-terminal="fs">
+      <div class="output"></div>
+      <div class="prompt-row"><span class="sym">$</span><input type="text" placeholder="введи команду..."></div>
+    </div>
+    <div class="quest">
+      <b>Задание.</b> Введи по очереди: <code>pwd</code>, затем <code>ls /</code>, затем
+      <code>ls /var/log</code>.
+    </div>
+    <div class="hint-row">
+      <details class="hint"><summary>Подсказка</summary>После <code>ls</code> ставится пробел и путь.
+        Одна косая черта - это и есть "самый верх", корень.</details>
+      <details class="solution"><summary>Показать разбор</summary><code>pwd</code> показал
+        <code>/home/anton</code> - ты стоишь в своей домашней папке, это место по умолчанию при
+        открытии терминала. <code>ls /</code> показал верхние ветки дерева. <code>ls /var/log</code>
+        показал файлы логов - туда мы ещё вернёмся в главе про падения.</details>
+    </div>
+    <div class="checklist" style="margin-top:12px">
+      <b>Проверь себя.</b> В какой папке логичнее искать файл настроек веб-сервера, а в какой - его
+      логи?
+      <details class="solution" style="margin-top:8px"><summary>Ответ</summary>Настройки - в
+        <code>/etc</code> (например, <code>/etc/nginx/nginx.conf</code>), логи - в
+        <code>/var/log</code> (например, <code>/var/log/nginx/error.log</code>).</details>
+    </div>
+  </div>
+
+  <div class="step">
+    <h2>2. Права доступа: кто вообще может трогать этот файл</h2>
+    <p class="theory">
+      <b>Теория.</b> У каждого файла в Linux есть <b>владелец</b> (конкретный пользователь) и
+      <b>группа</b> (набор пользователей), и три набора разрешений: для владельца, для группы и для
+      всех остальных. Разрешений три вида: <code>r</code> - read, читать; <code>w</code> - write,
+      изменять и удалять; <code>x</code> - execute, запускать (для папки <code>x</code> означает
+      "можно в неё зайти"). Команда <code>ls -l</code> печатает это слева строкой вида
+      <code>-rw-r--r--</code>: первый символ - тип (<code>-</code> файл, <code>d</code> папка),
+      дальше три тройки. Зачем это нужно: чтобы один пользователь (или взломанная программа,
+      работающая от его имени) не мог случайно или намеренно испортить файлы другого пользователя и
+      файлы системы. Менять разрешения - <code>chmod</code>, менять владельца -
+      <code>chown</code>.
+    </p>
+    <div class="example">
+      <b>Пример.</b> Строка <code>-rwxr-x--- 1 anton demobank 2048 ... deploy.sh</code> читается так:
+      обычный файл; владелец <code>anton</code> может читать, менять и запускать (<code>rwx</code>);
+      участники группы <code>demobank</code> - читать и запускать, но не менять (<code>r-x</code>);
+      все остальные - ничего (<code>---</code>). Команда <code>chmod +x deploy.sh</code> добавляет
+      право запуска, <code>chmod 600 secret.env</code> оставляет чтение и запись только владельцу, а
+      <code>sudo chown anton:demobank deploy.sh</code> назначает владельца и группу.
+    </div>
+    <div class="fake-terminal" data-terminal="perm">
+      <div class="output"></div>
+      <div class="prompt-row"><span class="sym">$</span><input type="text" placeholder="введи команду..."></div>
+    </div>
+    <div class="quest">
+      <b>Задание.</b> Введи <code>ls -l</code>, потом <code>chmod +x deploy.sh</code>, потом снова
+      <code>ls -l</code> и найди, что изменилось в первой колонке.
+    </div>
+    <div class="hint-row">
+      <details class="hint"><summary>Подсказка</summary>Смотри на буквы <code>x</code> в строке
+        напротив <code>deploy.sh</code>.</details>
+      <details class="solution"><summary>Показать разбор</summary>Было <code>-rw-r--r--</code> -
+        файл можно только читать и (владельцу) менять, запустить нельзя. Стало
+        <code>-rwxr-xr-x</code> - появилось право запуска. Сама <code>chmod</code> ничего не печатает
+        в ответ: в Linux "молча" значит "получилось".</details>
+    </div>
+    <div class="checklist" style="margin-top:12px">
+      <b>Проверь себя.</b> Файл с паролями к базе Демо Банка имеет права <code>-rw-r--r--</code>.
+      Что здесь плохо?
+      <details class="solution" style="margin-top:8px"><summary>Ответ</summary>Его может прочитать
+        <b>любой</b> пользователь системы (последняя тройка <code>r--</code>) и любая программа,
+        работающая от их имени. Правильно - <code>chmod 600</code>, то есть
+        <code>-rw-------</code>: доступ только владельцу.</details>
+    </div>
+  </div>
+
+  <div class="step">
+    <h2>3. sudo: почему "нельзя" - это фича, а не помеха</h2>
+    <p class="theory">
+      <b>Теория.</b> Обычный пользователь по умолчанию не может менять файлы в <code>/etc</code>,
+      устанавливать программы и останавливать службы - у него просто нет прав на запись в системные
+      папки. Чтобы выполнить одну команду с правами администратора (в Linux администратора зовут
+      <b>root</b>), её пишут с приставкой <code>sudo</code>: <code>sudo systemctl restart nginx</code>.
+      Система спросит твой пароль. Смысл: администраторские права включаются на одну конкретную
+      команду, а не на всю сессию, поэтому опечатка в обычной работе не может снести систему. В
+      Windows 11 ближайший аналог - окно "Разрешить приложению внести изменения?", только в Linux
+      это встроено прямо в командную строку и видно в истории команд.
+    </p>
+    <div class="example">
+      <b>Пример.</b> Попытка записать в системный файл без <code>sudo</code> заканчивается отказом:
+      <code>bash: /etc/hosts: Permission denied</code>. Это не поломка и не повод "дать себе права
+      на всё" - это сигнал остановиться и подумать: точно ли я должен править системный файл, и что
+      именно я меняю. Привычка работать под root постоянно - главная причина историй "я одной
+      командой удалил сервер".
+    </div>
+    <div class="fake-terminal" data-terminal="sudo">
+      <div class="output"></div>
+      <div class="prompt-row"><span class="sym">$</span><input type="text" placeholder="введи команду..."></div>
+    </div>
+    <div class="quest">
+      <b>Задание.</b> Сначала <code>whoami</code>, затем <code>echo test &gt; /etc/hosts</code>
+      (получишь отказ), затем <code>sudo whoami</code>.
+    </div>
+    <div class="hint-row">
+      <details class="hint"><summary>Подсказка</summary><code>whoami</code> печатает имя текущего
+        пользователя. Добавь перед ней <code>sudo</code> и посмотри, что изменится.</details>
+      <details class="solution"><summary>Показать разбор</summary>Без <code>sudo</code> ты
+        <code>anton</code> и в <code>/etc</code> писать не можешь - <code>Permission denied</code>.
+        С <code>sudo</code> та же команда отвечает <code>root</code>: на время одной команды ты
+        администратор. Именно это ограничение и не даёт обычной ошибке превратиться в аварию.</details>
+    </div>
+  </div>
+
+  <div class="step">
+    <h2>4. Процессы: ps aux и kill</h2>
+    <p class="theory">
+      <b>Теория.</b> <b>Процесс</b> - это запущенный экземпляр программы. Один и тот же браузер,
+      запущенный дважды, - два процесса. У каждого процесса есть номер, PID (process id), и владелец
+      - пользователь, от имени которого он работает (а значит, и права из шага 2). Команда
+      <code>ps aux</code> печатает список всех процессов в системе: кто владелец, какой PID, сколько
+      процессора и памяти занимает, и какой командой запущен. Чтобы попросить процесс завершиться,
+      используют <code>kill PID</code> - это <b>мягкое</b> завершение: процессу отправляется сигнал
+      "пожалуйста, закройся", и он успевает сохранить данные и корректно закрыть файлы. Если процесс
+      завис и на просьбу не отвечает, есть <code>kill -9 PID</code> - принудительное убийство: ядро
+      просто прекращает процесс, без всякого "сохранить". Поэтому <code>-9</code> - последнее
+      средство, а не первое.
+    </p>
+    <div class="example">
+      <b>Пример.</b> Веб-приложение Демо Банка зависло. Сначала <code>ps aux | grep python</code> -
+      найти PID. Потом <code>kill 8421</code> - попросить закрыться (у приложения есть шанс дописать
+      незаконченный запрос в базу). Если через несколько секунд процесс всё ещё в списке -
+      <code>kill -9 8421</code>.
+    </div>
+    <div class="fake-terminal" data-terminal="proc">
+      <div class="output"></div>
+      <div class="prompt-row"><span class="sym">$</span><input type="text" placeholder="введи команду..."></div>
+    </div>
+    <div class="quest">
+      <b>Задание.</b> Введи <code>ps aux</code>, затем <code>kill 8421</code>, затем снова
+      <code>ps aux</code>.
+    </div>
+    <div class="hint-row">
+      <details class="hint"><summary>Подсказка</summary>PID - вторая колонка вывода
+        <code>ps aux</code>. Ищи строку с <code>app.py</code>.</details>
+      <details class="solution"><summary>Показать разбор</summary><code>kill</code> в ответ ничего
+        не печатает - и это нормально. Проверяется результат не текстом ответа, а повторным
+        <code>ps aux</code>: строки с <code>app.py</code> и PID 8421 в списке больше нет.</details>
+    </div>
+    <div class="checklist" style="margin-top:12px">
+      <b>Проверь себя.</b> Почему не начинать сразу с <code>kill -9</code>, если он "надёжнее"?
+      <details class="solution" style="margin-top:8px"><summary>Ответ</summary>Потому что при
+        <code>-9</code> программа не получает возможности завершиться аккуратно: незаписанные данные
+        теряются, временные файлы и блокировки остаются. Обычный <code>kill</code> даёт ей закрыться
+        по-человечески.</details>
+    </div>
+  </div>
+
+  <div class="step">
+    <h2>5. systemd и systemctl: службы, которыми управляют</h2>
+    <p class="theory">
+      <b>Теория.</b> В главе 1 было понятие <b>службы</b> - программы, которая работает сама в фоне,
+      без того чтобы её каждый раз открывали. Теперь инструмент: в современных Linux службами
+      управляет <b>systemd</b>, а разговариваем мы с ним командой <code>systemctl</code>. Четыре
+      команды покрывают 90% работы: <code>systemctl status nginx</code> - в каком состоянии служба,
+      <code>systemctl start nginx</code> - запустить сейчас, <code>systemctl stop nginx</code> -
+      остановить, <code>systemctl restart nginx</code> - перезапустить (нужно после правки
+      настроек). Отдельно стоит <code>systemctl enable nginx</code> - "запускать автоматически при
+      загрузке сервера". Enabled и active - разные вещи: служба может быть запущена сейчас, но не
+      включена в автозагрузку, и тогда после перезагрузки сервера она не поднимется. Команды
+      start/stop/restart/enable меняют состояние системы, поэтому требуют <code>sudo</code>.
+    </p>
+    <div class="example">
+      <b>Пример.</b> В выводе <code>systemctl status</code> самая важная строка - <code>Active:</code>.
+      <code>active (running)</code> - работает. <code>inactive (dead)</code> - остановлена.
+      <code>failed</code> - пыталась запуститься и упала; вот тогда идём читать логи (следующий шаг).
+    </div>
+    <div class="fake-terminal" data-terminal="systemd">
+      <div class="output"></div>
+      <div class="prompt-row"><span class="sym">$</span><input type="text" placeholder="введи команду..."></div>
+    </div>
+    <div class="quest">
+      <b>Задание.</b> Посмотри состояние: <code>systemctl status nginx</code>. Останови:
+      <code>sudo systemctl stop nginx</code>. Проверь ещё раз status. Подними обратно:
+      <code>sudo systemctl start nginx</code>.
+    </div>
+    <div class="hint-row">
+      <details class="hint"><summary>Подсказка</summary>status можно смотреть без <code>sudo</code>,
+        а вот stop и start - только с ним.</details>
+      <details class="solution"><summary>Показать разбор</summary>После <code>stop</code> строка
+        <code>Active:</code> стала <code>inactive (dead)</code>, а строка <code>Loaded:</code>
+        по-прежнему говорит <code>enabled</code> - то есть служба выключена сейчас, но при следующей
+        загрузке машины поднимется снова. После <code>start</code> - опять
+        <code>active (running)</code>. Сами start/stop, как и <code>kill</code>, ничего не печатают.</details>
+    </div>
+  </div>
+
+  <div class="step">
+    <h2>6. journalctl: где искать, что случилось</h2>
+    <p class="theory">
+      <b>Теория.</b> systemd собирает весь вывод служб в общий журнал, и читается он командой
+      <code>journalctl</code>. Полезные варианты: <code>journalctl -u nginx</code> - только записи
+      конкретной службы (<code>-u</code> = unit, так systemd называет службу);
+      <code>journalctl -u nginx -n 20</code> - последние 20 строк; <code>journalctl -u nginx -f</code>
+      - следить в реальном времени, новые строки появляются сами (выход - Ctrl+C);
+      <code>journalctl -u nginx --since "10 min ago"</code> - только за последние 10 минут. Это
+      первое, что делают, когда служба <code>failed</code> или "всё работало и перестало": не
+      угадывать, а прочитать, что система сама написала о проблеме.
+    </p>
+    <div class="example">
+      <b>Пример.</b> Служба не поднимается. <code>systemctl status</code> говорит только
+      <code>failed</code>, а <code>journalctl -u demobank-api -n 20</code> показывает конкретную
+      причину - например, что порт уже занят другим процессом или что не найден файл конфигурации.
+      Дальше в курсе есть целая глава "когда всё упало", и она почти полностью про эту команду.
+    </div>
+    <div class="fake-terminal" data-terminal="journal">
+      <div class="output"></div>
+      <div class="prompt-row"><span class="sym">$</span><input type="text" placeholder="введи команду..."></div>
+    </div>
+    <div class="quest">
+      <b>Задание.</b> Введи <code>systemctl status demobank-api</code>, увидь <code>failed</code>, а
+      потом выясни причину: <code>journalctl -u demobank-api -n 20</code>.
+    </div>
+    <div class="hint-row">
+      <details class="hint"><summary>Подсказка</summary><code>-u</code> - имя службы,
+        <code>-n 20</code> - сколько последних строк показать.</details>
+      <details class="solution"><summary>Показать разбор</summary>В журнале прямым текстом написано,
+        что адрес уже используется (<code>Address already in use</code>) - значит, порт 8000 занял
+        другой процесс. Дальше алгоритм: <code>ps aux | grep 8000</code>, найти PID, завершить
+        лишний процесс, снова <code>start</code>. Status говорит "плохо", journalctl говорит
+        "почему".</details>
+    </div>
+  </div>
+
+  <div class="step">
+    <h2>7. Утилиты для текста: grep, cat, less (и что есть дальше)</h2>
+    <p class="theory">
+      <b>Теория.</b> В Linux почти всё - настройки, логи, вывод команд - это текст, поэтому утилиты
+      для текста и есть основной инструмент. <code>cat файл</code> печатает файл целиком - удобно для
+      коротких файлов. <code>less файл</code> открывает файл для просмотра с прокруткой (стрелки,
+      <code>/слово</code> для поиска, <code>q</code> для выхода) - для больших логов только так.
+      <code>grep слово файл</code> печатает только те строки, где встречается это слово: главный
+      инструмент поиска в логах. Полезные ключи: <code>-i</code> - не различать заглавные и строчные,
+      <code>-n</code> - показывать номера строк, <code>-r</code> - искать по всем файлам в папке.
+      Существуют ещё <code>sed</code> (заменить текст по шаблону) и <code>awk</code> (разобрать
+      строку на колонки и посчитать) - для более сложной обработки; их разберём по мере
+      необходимости, запоминать всё сразу не нужно и вредно.
+    </p>
+    <div class="example">
+      <b>Пример.</b> В логе на 50 000 строк нужны только ошибки:
+      <code>grep -i error /var/log/demobank/app.log</code>. Если ошибок много и они не влезают на
+      экран - <code>grep -i error /var/log/demobank/app.log | less</code> и листать спокойно.
+    </div>
+    <div class="fake-terminal" data-terminal="text">
+      <div class="output"></div>
+      <div class="prompt-row"><span class="sym">$</span><input type="text" placeholder="введи команду..."></div>
+    </div>
+    <div class="quest">
+      <b>Задание.</b> Посмотри файл целиком: <code>cat app.log</code>. Потом оставь только ошибки:
+      <code>grep -i error app.log</code>.
+    </div>
+    <div class="hint-row">
+      <details class="hint"><summary>Подсказка</summary>Порядок аргументов у grep: сначала что ищем,
+        потом где ищем.</details>
+      <details class="solution"><summary>Показать разбор</summary><code>cat</code> вывалил все
+        строки, включая обычные INFO. <code>grep -i error</code> оставил только строки со словом
+        error в любом регистре - из шума сразу видно два события. Именно так читают логи на
+        практике: не глазами по всему файлу, а фильтром.</details>
+    </div>
+  </div>
+
+  <div class="step">
+    <h2>8. Пайпы и перенаправления: | &gt; &gt;&gt;</h2>
+    <p class="theory">
+      <b>Теория.</b> Идея, на которой держится весь Linux: маленькие команды соединяются в цепочку.
+      Вертикальная черта <code>|</code> (пайп, "труба") берёт то, что напечатала левая команда, и
+      подаёт это правой команде как входные данные - вместо того, чтобы выводить на экран. Знак
+      <code>&gt;</code> перенаправляет вывод в файл, <b>стирая</b> прежнее содержимое файла, а
+      <code>&gt;&gt;</code> - <b>дописывает</b> в конец. Разница между ними стоила людям множества
+      случайно затёртых файлов, так что запомни: одна стрелка - перезаписать, две - дописать.
+    </p>
+    <div class="example">
+      <b>Пример.</b> <code>ps aux | grep app.py</code> - вывод длинного списка процессов не попадает
+      на экран, а уходит в grep, и на экран печатаются только строки про <code>app.py</code>. Ещё
+      примеры: <code>journalctl -u demobank-api | grep -i error</code> - только ошибки службы;
+      <code>ps aux | wc -l</code> - просто посчитать количество строк (<code>wc -l</code> считает
+      строки); <code>echo "начало работ" &gt;&gt; ~/deploy.log</code> - дописать пометку в свой
+      журнал действий.
+    </div>
+    <div class="fake-terminal" data-terminal="pipes">
+      <div class="output"></div>
+      <div class="prompt-row"><span class="sym">$</span><input type="text" placeholder="введи команду..."></div>
+    </div>
+    <div class="quest">
+      <b>Задание.</b> Найди процесс приложения не глазами, а фильтром:
+      <code>ps aux | grep app.py</code>. Потом посчитай, сколько всего процессов:
+      <code>ps aux | wc -l</code>.
+    </div>
+    <div class="hint-row">
+      <details class="hint"><summary>Подсказка</summary>Пайп ставится между двумя командами, с
+        пробелами по краям: <code>команда1 | команда2</code>.</details>
+      <details class="solution"><summary>Показать разбор</summary>В выводе видно две строки: сам
+        процесс <code>app.py</code> и заодно строка с самой командой <code>grep</code> - grep находит
+        и себя, потому что его собственная командная строка содержит искомое слово. Это нормально и
+        встречается у всех; PID нужного процесса берём из первой строки.
+        <code>wc -l</code> вернул одно число - количество строк, то есть примерно количество
+        процессов (плюс строка заголовка).</details>
+    </div>
+    <div class="checklist" style="margin-top:12px">
+      <b>Проверь себя.</b> Ты весь день дописывал заметки в <code>~/deploy.log</code> и по привычке
+      набрал <code>echo "готово" &gt; ~/deploy.log</code>. Что произошло с прежними заметками?
+      <details class="solution" style="margin-top:8px"><summary>Ответ</summary>Они стёрты: одна
+        стрелка перезаписывает файл целиком. Нужно было <code>&gt;&gt;</code>. Восстановить нечем -
+        корзины у перенаправления нет.</details>
+    </div>
+  </div>
+
+  <div class="checklist">
+    <b>Ты понял тему, если можешь:</b>
+    <ul>
+      <li>объяснить, чем дерево от <code>/</code> отличается от дисков C: и D:, и что лежит в
+        <code>/home</code>, <code>/etc</code>, <code>/var/log</code></li>
+      <li>прочитать строку <code>-rwxr-x---</code>: кто что может делать с этим файлом</li>
+      <li>сказать, зачем нужен <code>sudo</code> и почему запрет на запись в <code>/etc</code> -
+        это защита, а не помеха</li>
+      <li>найти процесс через <code>ps aux</code> и объяснить разницу между <code>kill</code> и
+        <code>kill -9</code></li>
+      <li>управлять службой через <code>systemctl status/start/stop/restart</code> и объяснить, чем
+        <code>active</code> отличается от <code>enabled</code></li>
+      <li>посмотреть последние записи службы через <code>journalctl -u имя -n 20</code> и сказать,
+        зачем это делают после <code>failed</code></li>
+      <li>отфильтровать лог через <code>grep</code> и объяснить, что делают <code>|</code>,
+        <code>&gt;</code> и <code>&gt;&gt;</code></li>
+    </ul>
+  </div>
+
+  <div class="done-row"><input type="checkbox" id="done-8"><label for="done-8">Глава пройдена</label></div>
+  <div class="nav" style="margin-top:24px"><a href="07-git-i-komandy.html">← назад</a><a href="09-python-dlya-avtomatizacii.html">дальше →</a></div>
+</div>
+
+<script>
+  var slug = 'gramotnost-kniga';
+  document.querySelectorAll('.done-row input[type="checkbox"]').forEach(function (cb) {
+    var saved = localStorage.getItem(slug + '-' + cb.id);
+    if (saved === 'true') cb.checked = true;
+    cb.addEventListener('change', function () { localStorage.setItem(slug + '-' + cb.id, cb.checked); });
+  });
+
+  var СЦЕНАРИИ = {
+    fs: {
+      'pwd': '/home/anton',
+      'ls /': 'bin   dev  home  lib   mnt  proc  run   srv  tmp  var\nboot  etc  init  media opt  root sbin  sys  usr',
+      'ls /var/log': 'apt          btmp    dpkg.log  journal  syslog\nalternatives.log  auth.log  lastlog  wtmp',
+      'ls /etc': 'apt  fstab  group  hostname  hosts  nginx  passwd  ssh  systemd',
+      'ls /home': 'anton',
+      'ls /mnt': 'c  wsl'
+    },
+    perm: {
+      'ls -l': 'total 12\n-rw-r--r-- 1 anton anton  128 Mar 11 10:02 app.log\n-rw-r--r-- 1 anton anton  340 Mar 11 09:55 deploy.sh\n-rw------- 1 anton anton   64 Mar 11 09:40 secret.env',
+      'chmod +x deploy.sh': '',
+      'ls -l deploy.sh': '-rwxr-xr-x 1 anton anton 340 Mar 11 09:55 deploy.sh',
+      'chmod 600 secret.env': ''
+    },
+    sudo: {
+      'whoami': 'anton',
+      'echo test > /etc/hosts': 'bash: /etc/hosts: Permission denied',
+      'sudo whoami': '[sudo] password for anton:\nroot',
+      'id': 'uid=1000(anton) gid=1000(anton) groups=1000(anton),27(sudo)'
+    },
+    proc: {
+      'ps aux': 'USER   PID %CPU %MEM    VSZ   RSS TTY  STAT START   TIME COMMAND\nroot     1  0.0  0.1 168000 11500 ?    Ss   09:30   0:01 /sbin/init\nroot   412  0.0  0.2 210400 18200 ?    Ss   09:30   0:00 /usr/sbin/sshd -D\nwww-da 903  0.0  0.3 245600 25100 ?    S    09:31   0:00 nginx: worker process\nanton 8421  1.2  2.1 512300 87400 ?    Sl   10:02   0:04 python3 app.py\nanton 9310  0.0  0.0  10200  3300 pts/0 R+  10:05   0:00 ps aux',
+      'kill 8421': '',
+      'kill -9 8421': '',
+      'ps aux | grep app.py': 'anton 8421  1.2  2.1 512300 87400 ?    Sl   10:02   0:04 python3 app.py\nanton 9312  0.0  0.0   9200  2400 pts/0 S+  10:05   0:00 grep --color=auto app.py'
+    },
+    systemd: {
+      'systemctl status nginx': '● nginx.service - A high performance web server\n     Loaded: loaded (/lib/systemd/system/nginx.service; enabled)\n     Active: active (running) since Tue 2024-03-11 09:31:02 UTC; 34min ago\n   Main PID: 901 (nginx)\n      Tasks: 3 (limit: 4500)\n     Memory: 8.1M',
+      'sudo systemctl stop nginx': '',
+      'sudo systemctl start nginx': '',
+      'sudo systemctl restart nginx': '',
+      'systemctl status demobank-api': '× demobank-api.service - Demo Bank API\n     Loaded: loaded (/etc/systemd/system/demobank-api.service; enabled)\n     Active: failed (Result: exit-code) since Tue 2024-03-11 10:04:11 UTC; 2min ago\n    Process: 8500 ExecStart=/usr/bin/python3 /srv/demobank/app.py (code=exited, status=1/FAILURE)'
+    },
+    journal: {
+      'systemctl status demobank-api': '× demobank-api.service - Demo Bank API\n     Loaded: loaded (/etc/systemd/system/demobank-api.service; enabled)\n     Active: failed (Result: exit-code) since Tue 2024-03-11 10:04:11 UTC; 2min ago\n    Process: 8500 ExecStart=/usr/bin/python3 /srv/demobank/app.py (code=exited, status=1/FAILURE)',
+      'journalctl -u demobank-api -n 20': 'Mar 11 10:04:10 srv systemd[1]: Started Demo Bank API.\nMar 11 10:04:11 srv python3[8500]: Traceback (most recent call last):\nMar 11 10:04:11 srv python3[8500]: OSError: [Errno 98] Address already in use\nMar 11 10:04:11 srv systemd[1]: demobank-api.service: Main process exited, code=exited, status=1/FAILURE\nMar 11 10:04:11 srv systemd[1]: demobank-api.service: Failed with result \'exit-code\'.',
+      'journalctl -u nginx -n 5': 'Mar 11 09:31:02 srv systemd[1]: Starting A high performance web server...\nMar 11 09:31:02 srv systemd[1]: Started A high performance web server.'
+    },
+    text: {
+      'cat app.log': '2024-03-11 10:01:55 INFO  starting demobank api\n2024-03-11 10:01:56 INFO  connected to database\n2024-03-11 10:02:14 ERROR payment timeout for account 10482\n2024-03-11 10:02:15 INFO  retry scheduled\n2024-03-11 10:03:40 error  cannot write report file',
+      'grep -i error app.log': '2024-03-11 10:02:14 ERROR payment timeout for account 10482\n2024-03-11 10:03:40 error  cannot write report file',
+      'grep error app.log': '2024-03-11 10:03:40 error  cannot write report file',
+      'grep -n -i error app.log': '3:2024-03-11 10:02:14 ERROR payment timeout for account 10482\n5:2024-03-11 10:03:40 error  cannot write report file'
+    },
+    pipes: {
+      'ps aux | grep app.py': 'anton 8421  1.2  2.1 512300 87400 ?    Sl   10:02   0:04 python3 app.py\nanton 9312  0.0  0.0   9200  2400 pts/0 S+  10:05   0:00 grep --color=auto app.py',
+      'ps aux | wc -l': '112',
+      'ps aux': 'USER   PID %CPU %MEM    VSZ   RSS TTY  STAT START   TIME COMMAND\nroot     1  0.0  0.1 168000 11500 ?    Ss   09:30   0:01 /sbin/init\nanton 8421  1.2  2.1 512300 87400 ?    Sl   10:02   0:04 python3 app.py',
+      'echo "начало работ" >> ~/deploy.log': '',
+      'cat ~/deploy.log': 'начало работ'
+    }
+  };
+  document.querySelectorAll('.fake-terminal').forEach(function (term) {
+    var сценарий = СЦЕНАРИИ[term.dataset.terminal] || {};
+    var input = term.querySelector('input');
+    var output = term.querySelector('.output');
+    input.addEventListener('keydown', function (e) {
+      if (e.key !== 'Enter') return;
+      var команда = input.value.trim();
+      output.textContent += '$ ' + команда + '\n';
+      var ответ = сценарий[команда.toLowerCase()];
+      if (ответ === '') {
+        output.textContent += '\n';
+      } else {
+        output.textContent += (ответ || 'команда не из этого шага - попробуй именно ту, что в задании') + '\n\n';
+      }
+      input.value = '';
+    });
+  });
+</script>
+</body>
+</html>

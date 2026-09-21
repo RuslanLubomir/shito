@@ -1,0 +1,566 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Глава 12. Docker и Dockerfile</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>📦</text></svg>">
+<style>
+  :root {
+    --paper: #FFFFFF; --raised: #FFFFFF; --ink: #2B2B2B; --muted: #737373; --muted-2: #A3A3A3;
+    --line: #E4E4E4; --line-soft: #F0F0F0; --accent: #5C5C5C; --accent-bg: #ECECEC; --accent-line: #C6C6C6;
+    --pos: #1A7F4E; --pos-bg: #E4F3EA; --warn: #B5762A; --warn-bg: #FBF0E2;
+    --shadow-sm: 0 1px 2px rgba(24,32,22,0.04);
+    --shadow: 0 1px 2px rgba(24,32,22,0.04), 0 8px 22px -10px rgba(24,32,22,0.12);
+    --radius: 14px; --radius-sm: 9px;
+    --font-display: ui-serif, "Iowan Old Style", "Palatino Linotype", Georgia, serif;
+    --font-body: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+    --font-mono: ui-monospace, "SF Mono", "Cascadia Code", Consolas, monospace;
+    --space-2: 8px; --space-3: 12px; --space-4: 16px; --space-5: 24px;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--paper); color: var(--ink); font-family: var(--font-body);
+    font-size: 0.95rem; line-height: 1.55; }
+  .wrap { max-width: 680px; margin: 0 auto; padding: var(--space-5) var(--space-4) 80px; }
+  .nav { display: flex; justify-content: space-between; font-size: 0.85rem; margin-bottom: var(--space-4); }
+  .nav a { color: var(--accent); }
+  h1 { font-family: var(--font-display); font-size: 1.6rem; margin: 0 0 var(--space-2); }
+  h2 { font-size: 1.05rem; margin: var(--space-4) 0 var(--space-2); }
+  .theory { background: var(--accent-bg); border-radius: var(--radius-sm); padding: var(--space-3) var(--space-4);
+    font-size: 0.9rem; margin: var(--space-3) 0; }
+  .step { background: var(--raised); border: 1px solid var(--line); border-radius: var(--radius);
+    padding: var(--space-4); margin: var(--space-4) 0; box-shadow: var(--shadow-sm); }
+  .example { border-left: 3px solid var(--accent); padding: var(--space-2) var(--space-4); margin: var(--space-3) 0;
+    font-size: 0.9rem; color: var(--muted); }
+  .scope-note { background: #FFF4D6; border-radius: var(--radius-sm); padding: var(--space-3) var(--space-4);
+    font-size: 0.85rem; color: #7a5c10; margin: var(--space-4) 0; }
+  pre.code-block { background: var(--ink); color: #EDEDED; padding: var(--space-4); border-radius: var(--radius-sm);
+    font-family: var(--font-mono); font-size: 0.85rem; white-space: pre-wrap; margin: var(--space-3) 0; }
+  .fake-terminal { background: #1b1b1b; border-radius: var(--radius-sm); padding: var(--space-4);
+    font-family: var(--font-mono); font-size: 0.85rem; color: #d8d8d8; margin: var(--space-3) 0; }
+  .fake-terminal .output { white-space: pre-wrap; margin: var(--space-2) 0; min-height: 1.2em; }
+  .fake-terminal .prompt-row { display: flex; align-items: center; gap: var(--space-2); }
+  .fake-terminal .prompt-row span.sym { color: #6fcf6f; }
+  .fake-terminal input { background: transparent; border: none; color: #fff; font-family: var(--font-mono);
+    font-size: 0.85rem; flex: 1; outline: none; }
+  .quest { border-left: 3px solid var(--accent); padding: var(--space-2) var(--space-4); margin: var(--space-4) 0; }
+  details.hint, details.solution { border: 1px solid var(--line); border-radius: var(--radius-sm);
+    padding: var(--space-2) var(--space-3); margin-bottom: var(--space-2); font-size: 0.88rem; }
+  details.solution summary { color: var(--pos); font-weight: 600; }
+  .checklist { background: var(--pos-bg); border-radius: var(--radius-sm); padding: var(--space-4);
+    margin: var(--space-4) 0; font-size: 0.9rem; }
+  .checklist ul { margin: var(--space-2) 0 0; padding-left: var(--space-4); }
+  .done-row { display: flex; align-items: center; gap: var(--space-2); margin-top: var(--space-4);
+    padding-top: var(--space-3); border-top: 1px dashed var(--line); }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="nav"><a href="00-оглавление.html">← оглавление</a><span>Глава 12 из 33</span></div>
+  <h1>Docker и Dockerfile</h1>
+  <p style="color:var(--muted)">В прошлой главе базу данных запустили одной длинной командой и не
+    разбирались, что это было. Теперь разберёмся - и упакуем в коробку свой собственный код.</p>
+
+  <div class="theory">
+    <b>Один технический момент сразу.</b> Ты на Windows 11, значит Docker у тебя - это Docker
+    Desktop (та самая программа с иконкой китёнка, которую ставили в главе 11). Команды
+    <code>docker ...</code> печатаются в обычном терминале Windows - PowerShell или в терминале
+    внутри редактора кода, - и они одинаковые на Windows, Mac и Linux. Значок <code>$</code> в
+    примерах ниже - только пометка "здесь курсор ждёт команду", печатать его не надо. Ещё одно: пока
+    Docker Desktop не запущен (иконка в трее серая или его нет), любая команда <code>docker</code>
+    ответит ошибкой соединения - это не поломка, просто движок выключен.
+  </div>
+  <div class="theory">
+    <b>Как работает тренажёр ниже.</b> Это имитация терминала: он понимает ровно ту команду, что
+    дана в задании, и печатает тот текст, который в этой ситуации напечатал бы настоящий Docker.
+    Наберёшь что-то другое - тренажёр не сломался, просто в этом шаге отрабатывается конкретная
+    команда.
+  </div>
+
+  <div class="step">
+    <h2>Зачем вообще коробка: "у меня работает, а на сервере - нет"</h2>
+    <p class="theory">
+      <b>Теория.</b> Программа никогда не работает "сама по себе" - ей нужно окружение: нужная
+      версия языка (например, Python 3.12, а не 3.9), нужные версии библиотек, нужные системные
+      файлы. На твоём ноутбуке это окружение сложилось само, за месяцы установок. На арендованном
+      сервере его нет и оно другое. Отсюда классика: код, который безупречно работает у тебя,
+      на сервере падает с непонятной ошибкой. Docker решает это грубо и эффективно: он позволяет
+      упаковать в одну коробку (контейнер) вообще всё, что нужно для запуска - сам код, интерпретатор
+      Python, все библиотеки, нужные системные пакеты. Коробку переносишь на сервер, и она
+      запускается там точно так же, как у тебя, потому что внутри неё всё то же самое.
+    </p>
+    <div class="example">
+      <b>Пример.</b> В проекте Демо Банка бэкенд написан под Python 3.12 и использует библиотеку,
+      которая появилась только в свежих версиях. На сервере, который мы арендовали, "из коробки"
+      стоит Python 3.10. Без Docker пришлось бы вручную ставить на сервер второй Python, следить,
+      чтобы он не конфликтовал с системным, повторять это на каждом новом сервере. С Docker в
+      коробке лежит ровно <code>python:3.12-slim</code>, и что стоит на самом сервере - уже не важно.
+    </div>
+    <div class="checklist" style="margin-top:12px">
+      <b>Проверь себя.</b> Коллега говорит: "Я скинул тебе код, почему у тебя не запускается, у меня
+      же работает". Что именно он не передал вместе с кодом?
+      <details class="solution" style="margin-top:8px"><summary>Ответ</summary>Окружение: версию
+      Python, набор установленных библиотек и их версии, системные пакеты. Код - это только часть
+      того, что нужно для запуска. Контейнер передаётся вместе с окружением, поэтому такой разговор
+      просто не возникает.</details>
+    </div>
+  </div>
+
+  <div class="step">
+    <h2>Образ и контейнер - это разные вещи</h2>
+    <p class="theory">
+      <b>Теория.</b> <b>Образ</b> (image) - это неизменяемый заготовленный слепок: рецепт вместе со
+      всеми ингредиентами, уже сложенными в правильном порядке. Сам по себе он ничего не делает, он
+      просто лежит на диске. <b>Контейнер</b> (container) - это запущенный по этому образу живой
+      экземпляр: процесс, который работает, что-то печатает, занимает память и порт. Из одного
+      образа можно запустить сколько угодно контейнеров одновременно, и они друг о друге ничего не
+      знают. Удалить контейнер - не значит потерять образ: образ остался, из него запускают новый
+      контейнер за секунду.
+    </p>
+    <div class="example">
+      <b>Пример.</b> Образ <code>postgres:16</code> из главы 11 ты скачал один раз. Из него можно
+      поднять два контейнера: один - база для разработки на порту 5432, второй - отдельная чистая
+      база для тестов на 5433. Один и тот же "чертёж", два независимых работающих экземпляра с
+      разными данными внутри.
+    </div>
+    <div class="checklist" style="margin-top:12px">
+      <b>Проверь себя.</b> Ты сделал <code>docker rm</code> у контейнера с базой. Нужно ли теперь
+      снова качать PostgreSQL из интернета, чтобы поднять базу заново?
+      <details class="solution" style="margin-top:8px"><summary>Ответ</summary>Нет. Удалён был
+      контейнер, а образ <code>postgres:16</code> остался на диске - <code>docker run</code>
+      поднимет новый контейнер сразу, без скачивания. (Данные внутри удалённого контейнера, если они
+      не были сохранены наружу, при этом потеряны - об этом будет отдельно в главе про тома.)</details>
+    </div>
+  </div>
+
+  <div class="step">
+    <h2>Четыре команды, которыми пользуешься каждый день</h2>
+    <p class="theory">
+      <b>Теория.</b> <code>docker ps</code> - список работающих сейчас контейнеров (с флагом
+      <code>-a</code> - включая остановленные и упавшие). <code>docker images</code> - какие образы
+      лежат у тебя на диске и сколько места занимают. <code>docker stop &lt;имя-или-id&gt;</code> -
+      вежливо остановить контейнер, <code>docker rm &lt;имя-или-id&gt;</code> - удалить уже
+      остановленный. <code>docker logs &lt;имя-или-id&gt;</code> - показать всё, что контейнер
+      напечатал в консоль за свою жизнь; это главный инструмент отладки, потому что контейнер
+      печатает не в твоё окно, а "внутрь себя".
+    </p>
+    <p><b>Разобранный пример.</b> У каждого контейнера есть длинный шестнадцатеричный ID и имя
+      (своё, заданное через <code>--name</code>, или случайное смешное вроде
+      <code>nostalgic_turing</code>). В командах можно указывать и то и другое, причём от ID хватает
+      первых нескольких символов - лишь бы они однозначно указывали на один контейнер.</p>
+    <div class="fake-terminal" data-terminal="ps">
+      <div class="output"></div>
+      <div class="prompt-row"><span class="sym">$</span><input type="text" placeholder="введи команду..."></div>
+    </div>
+    <div class="quest">
+      <b>Задание.</b> Посмотри, что сейчас запущено: <code>docker ps</code>. Потом посмотри список
+      образов: <code>docker images</code>.
+    </div>
+    <div class="hint-row">
+      <details class="hint"><summary>Подсказка</summary>Две команды по очереди, каждая - Enter.
+      Обрати внимание: в <code>docker ps</code> столбец PORTS показывает, какой порт контейнера
+      выведен наружу, а столбец STATUS - как давно он работает.</details>
+      <details class="solution"><summary>Показать разбор</summary><code>docker ps</code> показал один
+      работающий контейнер <code>demobank-db</code> из образа <code>postgres:16</code> - тот самый из
+      главы 11, он живёт уже два часа и слушает порт 5432. <code>docker images</code> показал два
+      образа на диске: <code>postgres:16</code> (432 МБ) и <code>python:3.12-slim</code> (130 МБ).
+      Образов больше, чем контейнеров - это нормально, образ может просто лежать без дела.</details>
+    </div>
+  </div>
+
+  <div class="step">
+    <h2>Dockerfile - рецепт своего образа, построчно</h2>
+    <p class="theory">
+      <b>Теория.</b> <code>Dockerfile</code> - это текстовый файл без расширения, который лежит в
+      корне проекта и по шагам описывает, как собрать образ: от какой готовой основы отталкиваемся,
+      что внутрь скопировать, что установить, что запускать при старте. Каждая строка - один шаг.
+      Docker выполняет их сверху вниз и получает образ.
+    </p>
+    <pre class="code-block">FROM python:3.12-slim
+WORKDIR /app
+COPY requirements.txt .
+RUN pip install -r requirements.txt
+COPY . .
+CMD ["python", "app.py"]</pre>
+    <p class="theory">
+      <b>Что делает каждая строка.</b><br>
+      <code>FROM python:3.12-slim</code> - берём за основу готовый официальный образ с Python 3.12.
+      Слово <code>slim</code> означает урезанную сборку: тот же Python, но без кучи лишних
+      системных пакетов, поэтому образ в разы меньше.<br>
+      <code>WORKDIR /app</code> - создаём внутри коробки папку <code>/app</code> и делаем её текущей.
+      Все следующие команды выполняются "находясь" в ней. Это просто чтобы код не валялся в корне.<br>
+      <code>COPY requirements.txt .</code> - копируем из своей папки на компьютере в коробку
+      (в <code>/app</code>, точка = "сюда") только один файл: список нужных библиотек.<br>
+      <code>RUN pip install -r requirements.txt</code> - внутри коробки устанавливаем эти
+      библиотеки. <code>RUN</code> - это "выполни команду во время сборки, один раз".<br>
+      <code>COPY . .</code> - теперь копируем внутрь всё остальное: сам код проекта.<br>
+      <code>CMD ["python", "app.py"]</code> - что запустить, когда из этого образа поднимут
+      контейнер. В отличие от <code>RUN</code>, эта строка при сборке не выполняется - она
+      запоминается "на потом".
+    </p>
+    <p class="theory">
+      <b>Почему requirements.txt копируется отдельно и раньше кода.</b> Docker запоминает результат
+      каждой строки отдельно - это называется слои, а повторное использование уже готовых слоёв -
+      кэширование. При новой сборке Docker идёт по строкам сверху вниз и, пока входные данные строки
+      не изменились, берёт готовый результат с прошлого раза мгновенно. Как только доходит до
+      изменившейся строки - её и все следующие выполняет заново. Ты правишь код в сто раз чаще, чем
+      список библиотек. Если бы стояло <code>COPY . .</code> перед установкой, то любая правка одной
+      буквы в коде "ломала" бы кэш и <code>pip install</code> шёл бы заново каждую сборку - это
+      минуты ожидания. А при таком порядке правка кода задевает только две последние строки, и
+      сборка занимает пару секунд.
+    </p>
+    <div class="example">
+      <b>Пример.</b> В Демо Банке <code>requirements.txt</code> меняется примерно раз в неделю, код -
+      двадцать раз в день. Именно этот порядок строк превратил пересборку с 90 секунд в 3 секунды -
+      разница, из-за которой начинаешь пересобирать спокойно, а не откладывать.
+    </div>
+    <div class="checklist" style="margin-top:12px">
+      <b>Проверь себя.</b> Чем <code>RUN</code> отличается от <code>CMD</code>?
+      <details class="solution" style="margin-top:8px"><summary>Ответ</summary><code>RUN</code>
+      выполняется один раз во время сборки образа, и его результат остаётся внутри образа
+      (установленные библиотеки). <code>CMD</code> при сборке не выполняется вообще - это запись
+      "какую команду запустить при старте контейнера", она срабатывает на
+      <code>docker run</code>.</details>
+    </div>
+  </div>
+
+  <div class="step">
+    <h2>Собираем образ</h2>
+    <p class="theory">
+      <b>Теория.</b> <code>docker build -t demobank-app .</code> - собрать образ по Dockerfile.
+      <code>-t demobank-app</code> - дать образу человеческое имя (tag), иначе он останется
+      безымянным и найти его будет неудобно. Последняя точка - это не опечатка и не конец
+      предложения: это путь к папке, содержимое которой отправляется Docker'у как исходники для
+      сборки (контекст сборки). Точка = "текущая папка". Именно в ней Docker ищет
+      <code>Dockerfile</code> и оттуда берёт файлы для <code>COPY</code>.
+    </p>
+    <div class="fake-terminal" data-terminal="build">
+      <div class="output"></div>
+      <div class="prompt-row"><span class="sym">$</span><input type="text" placeholder="введи команду..."></div>
+    </div>
+    <div class="quest">
+      <b>Задание.</b> Собери образ: <code>docker build -t demobank-app .</code>
+    </div>
+    <div class="hint-row">
+      <details class="hint"><summary>Подсказка</summary>Не забудь пробел и точку в конце - без них
+      Docker не поймёт, где брать файлы, и ответит ошибкой про отсутствие контекста.</details>
+      <details class="solution"><summary>Показать разбор</summary>Docker вывел строки со словом
+      <code>CACHED</code> - это те шаги, результат которых он взял с прошлой сборки (установка
+      библиотек в том числе, потому что <code>requirements.txt</code> не менялся). Заново выполнились
+      только копирование кода и финальная упаковка. В конце - строка о том, что образ получил имя
+      <code>demobank-app:latest</code>. Слово <code>latest</code> Docker дописывает сам, когда версия
+      не указана явно.</details>
+    </div>
+  </div>
+
+  <div class="step">
+    <h2>Запускаем и прокидываем порт</h2>
+    <p class="theory">
+      <b>Теория.</b> Контейнер изолирован от твоего компьютера - у него как бы своя маленькая
+      отдельная сеть. Если программа внутри слушает порт 8000, снаружи по адресу
+      <code>localhost:8000</code> её всё равно не видно: изнутри наружу дверей нет по умолчанию.
+      Дверь открывают флагом <code>-p</code>: <code>-p 8000:8000</code> читается как
+      "порт 8000 моего компьютера соединить с портом 8000 внутри контейнера". Слева всегда твой
+      компьютер, справа - контейнер, и они могут не совпадать: <code>-p 9000:8000</code> означает
+      "я захожу на localhost:9000, а попадаю на 8000 внутри".
+    </p>
+    <div class="example">
+      <b>Пример.</b> Порт 8000 на ноутбуке уже занят чем-то другим - вместо того чтобы искать и
+      убивать ту программу, запускаем <code>docker run -p 8080:8000 demobank-app</code> и открываем
+      <code>http://localhost:8080</code>. Внутри контейнера при этом ничего менять не пришлось.
+    </div>
+    <div class="fake-terminal" data-terminal="run">
+      <div class="output"></div>
+      <div class="prompt-row"><span class="sym">$</span><input type="text" placeholder="введи команду..."></div>
+    </div>
+    <div class="quest">
+      <b>Задание.</b> Запусти: <code>docker run -p 8000:8000 demobank-app</code>
+    </div>
+    <div class="hint-row">
+      <details class="hint"><summary>Подсказка</summary>После запуска окно терминала "залипнет" -
+      контейнер работает и печатает в него. Это нормально, так и должно быть. Остановить -
+      Ctrl+C.</details>
+      <details class="solution"><summary>Показать разбор</summary>Приложение написало, что слушает
+      <code>0.0.0.0:8000</code> - адрес <code>0.0.0.0</code> внутри контейнера значит "принимаю
+      подключения с любого адреса", и это важно: если бы программа слушала только
+      <code>127.0.0.1</code>, то снаружи она была бы недоступна даже с проброшенным портом. Терминал
+      остался занят - контейнер запущен в переднем плане. Чтобы отпустить терминал, запускают с
+      флагом <code>-d</code> (detached, в фоне).</details>
+    </div>
+  </div>
+
+  <div class="step">
+    <h2>Контейнер упал сразу после старта - не гадай, читай логи</h2>
+    <p class="theory">
+      <b>Теория.</b> Самая частая история новичка: <code>docker run -d</code> прошёл, выдал ID,
+      а через секунду <code>docker ps</code> пустой. Это значит, что программа внутри запустилась,
+      упала с ошибкой, и контейнер честно завершился - контейнер живёт ровно столько, сколько живёт
+      его главный процесс. Причина ошибки не пропала: она напечаталась внутрь контейнера. Показать
+      её: <code>docker ps -a</code> (чтобы найти ID упавшего) и затем <code>docker logs &lt;id&gt;</code>.
+    </p>
+    <div class="fake-terminal" data-terminal="logs">
+      <div class="output"></div>
+      <div class="prompt-row"><span class="sym">$</span><input type="text" placeholder="введи команду..."></div>
+    </div>
+    <div class="quest">
+      <b>Задание.</b> Найди упавший контейнер: <code>docker ps -a</code>, затем прочитай причину:
+      <code>docker logs 4f1c9a2b7d3e</code>
+    </div>
+    <div class="hint-row">
+      <details class="hint"><summary>Подсказка</summary>В <code>docker ps -a</code> смотри столбец
+      STATUS: <code>Exited (1)</code> означает, что процесс внутри завершился с ошибкой. Ноль в
+      скобках - завершился нормально.</details>
+      <details class="solution"><summary>Показать разбор</summary>В логах - обычная трассировка
+      Python: <code>FileNotFoundError</code> на <code>config.yml</code>. То есть код внутри
+      контейнера ищет файл настроек, которого в образ не попало. Причина почти всегда одна из двух:
+      файл исключён в <code>.dockerignore</code>, или он вообще не лежит в папке, из которой
+      собирался образ. Заметь: без <code>docker logs</code> ты бы видел только "контейнер не
+      работает" и мог бы час перебирать варианты.</details>
+    </div>
+  </div>
+
+  <div class="step">
+    <h2>Останавливаем и убираем за собой</h2>
+    <p class="theory">
+      <b>Теория.</b> <code>docker stop &lt;id&gt;</code> посылает программе внутри сигнал "заканчивай
+      работу" и даёт несколько секунд на корректное завершение. Остановленный контейнер никуда не
+      исчезает - он остаётся в списке <code>docker ps -a</code> и занимает место на диске, поэтому
+      после него делают <code>docker rm &lt;id&gt;</code>. Удалить работающий контейнер обычной
+      <code>rm</code> нельзя - Docker не даст, сначала останови.
+    </p>
+    <div class="fake-terminal" data-terminal="stoprm">
+      <div class="output"></div>
+      <div class="prompt-row"><span class="sym">$</span><input type="text" placeholder="введи команду..."></div>
+    </div>
+    <div class="quest">
+      <b>Задание.</b> Останови: <code>docker stop demobank-db</code>, потом удали:
+      <code>docker rm demobank-db</code>. Для интереса попробуй сначала удалить работающий:
+      <code>docker rm demobank-db</code> до остановки - и посмотри на ответ.
+    </div>
+    <div class="hint-row">
+      <details class="hint"><summary>Подсказка</summary>Обе команды печатают в ответ просто имя
+      контейнера - это и есть подтверждение, что всё получилось. Docker вообще скуп на слова, когда
+      всё хорошо.</details>
+      <details class="solution"><summary>Показать разбор</summary>Попытка удалить работающий
+      контейнер даёт ошибку с прямой подсказкой "Stop the container before removing" - Docker
+      специально не позволяет снести то, что прямо сейчас работает. После <code>stop</code> та же
+      <code>rm</code> проходит молча. Образ <code>postgres:16</code> при этом на диске остался -
+      проверяется через <code>docker images</code>.</details>
+    </div>
+  </div>
+
+  <div class="step">
+    <h2>.dockerignore - тот же принцип, что и .gitignore</h2>
+    <p class="theory">
+      <b>Теория.</b> Помнишь <code>.gitignore</code> из главы 7 - список того, что не надо
+      отправлять в репозиторий? У Docker есть ровно такой же по смыслу файл
+      <code>.dockerignore</code>: список того, что не надо отправлять в сборку образа. Он важен,
+      потому что <code>COPY . .</code> буквально означает "копируй всё", и без фильтра в коробку
+      уедут папка виртуального окружения <code>.venv</code> (сотни мегабайт, причём собранные под
+      Windows и внутри Linux-контейнера всё равно нерабочие), вся история <code>.git</code>, кэш
+      <code>__pycache__</code> и локальный файл с паролями <code>.env</code>. Последнее - уже не
+      только про размер, но и про безопасность: образ можно кому-то передать.
+    </p>
+    <pre class="code-block">.venv/
+.git/
+__pycache__/
+*.pyc
+.env
+node_modules/</pre>
+    <div class="example">
+      <b>Пример.</b> Первая сборка образа Демо Банка получилась 1.4 ГБ и собиралась минуту с
+      лишним - Docker покорно упаковал внутрь <code>.venv</code> и <code>.git</code>. После
+      добавления шести строк выше образ стал 180 МБ. Ничего в коде не менялось.
+    </div>
+    <div class="checllist checklist" style="margin-top:12px">
+      <b>Проверь себя.</b> Почему исключить <code>.venv</code> - это не потеря библиотек, ведь
+      программе внутри контейнера они нужны?
+      <details class="solution" style="margin-top:8px"><summary>Ответ</summary>Потому что библиотеки
+      внутрь образа попадают не копированием папки, а установкой заново строкой
+      <code>RUN pip install -r requirements.txt</code> - уже внутри Linux-контейнера и под нужную
+      версию Python. Твоя локальная <code>.venv</code> там не только не нужна, но и не
+      работоспособна.</details>
+    </div>
+  </div>
+
+  <div class="scope-note">
+    Честная оговорка про упрощение. Всё в этой главе - один образ, один контейнер, одна команда
+    вручную на своём компьютере. В реальном проекте Демо Банка контейнеров несколько (приложение +
+    база + веб-сервер), их не запускают по одному руками, а описывают одним файлом и поднимают
+    вместе - это следующая глава про Docker Compose. Дальше по курсу появится ещё два слоя, которые
+    здесь сознательно вынесены за скобки: сохранение данных вне контейнера (сейчас, если удалить
+    контейнер с базой, данные пропадут - в реальности так делать нельзя) и то, что один сервер
+    обслуживает не тебя одного, а несколько независимых клиентов, и тогда изоляция контейнеров
+    перестаёт быть удобством и становится требованием. Ничего из написанного здесь не переучивать -
+    оно просто пока не полное.
+  </div>
+
+  <div class="step">
+    <h2>Практика: напиши свой Dockerfile</h2>
+    <p class="theory">
+      <b>Теория.</b> Лучший способ закрепить - собрать образ для скрипта из четырёх строк, без
+      фреймворков и портов. Создай на компьютере пустую папку, а в ней файл
+      <code>app.py</code>:
+    </p>
+    <pre class="code-block">import requests
+
+r = requests.get("https://api.github.com")
+print("статус ответа:", r.status_code)
+print("готово")</pre>
+    <p>И рядом файл <code>requirements.txt</code> с одной строкой:</p>
+    <pre class="code-block">requests==2.32.3</pre>
+    <div class="quest">
+      <b>Задание.</b> Напиши в этой же папке <code>Dockerfile</code>, который: берёт за основу
+      Python 3.12 slim, работает в папке <code>/app</code>, ставит библиотеки из
+      <code>requirements.txt</code> (так, чтобы правка <code>app.py</code> не вызывала переустановку),
+      копирует код и при старте запускает <code>app.py</code>. Потом собери его под именем
+      <code>hello-docker</code> и запусти.
+    </div>
+    <div class="hint-row">
+      <details class="hint"><summary>Подсказка 1</summary>Строк будет шесть, все ключевые слова
+      пишутся заглавными: <code>FROM</code>, <code>WORKDIR</code>, <code>COPY</code>,
+      <code>RUN</code>, <code>COPY</code>, <code>CMD</code>. Порядок важен именно из-за
+      кэширования.</details>
+      <details class="hint"><summary>Подсказка 2</summary>Собрать: <code>docker build -t
+      hello-docker .</code> (точка в конце обязательна). Запустить:
+      <code>docker run hello-docker</code> - флаг <code>-p</code> тут не нужен, скрипт ничего не
+      слушает, он только сам куда-то ходит и печатает.</details>
+      <details class="hint"><summary>Подсказка 3</summary>Если Docker ругается
+      <code>failed to read dockerfile</code> - скорее всего Windows сохранил файл как
+      <code>Dockerfile.txt</code>. Имя должно быть ровно <code>Dockerfile</code>, без расширения;
+      в Проводнике включи показ расширений и убери <code>.txt</code>.</details>
+      <details class="solution"><summary>Показать решение</summary>
+        Dockerfile:
+        <pre class="code-block">FROM python:3.12-slim
+WORKDIR /app
+COPY requirements.txt .
+RUN pip install -r requirements.txt
+COPY . .
+CMD ["python", "app.py"]</pre>
+        Затем:
+        <pre class="code-block">docker build -t hello-docker .
+docker run hello-docker</pre>
+        В выводе запуска увидишь две строки, которые печатает сам скрипт:
+        <code>статус ответа: 200</code> и <code>готово</code>. После этого контейнер завершится сам -
+        программа закончилась, значит и контейнеру жить больше незачем. Он останется в
+        <code>docker ps -a</code> со статусом <code>Exited (0)</code>: ноль означает "завершился без
+        ошибки". Чтобы контейнер удалялся автоматически сразу после завершения, запускают
+        <code>docker run --rm hello-docker</code>.
+      </details>
+    </div>
+  </div>
+
+  <div class="checklist">
+    <b>Ты понял тему, если можешь:</b>
+    <ul>
+      <li>объяснить своими словами, какую проблему решает контейнер и почему код без окружения - это ещё не работающая программа</li>
+      <li>сказать, чем образ отличается от контейнера, и почему из одного образа можно запустить несколько контейнеров</li>
+      <li>назвать по памяти, что показывают <code>docker ps</code>, <code>docker ps -a</code>, <code>docker images</code> и <code>docker logs</code></li>
+      <li>объяснить каждую строку простого Dockerfile и сказать, чем <code>RUN</code> отличается от <code>CMD</code></li>
+      <li>объяснить, почему <code>COPY requirements.txt</code> стоит раньше <code>COPY . .</code></li>
+      <li>расшифровать <code>-p 8080:8000</code> - что слева, что справа</li>
+      <li>описать порядок действий, когда контейнер запустился и сразу пропал из <code>docker ps</code></li>
+      <li>сказать, зачем нужен <code>.dockerignore</code> и почему исключение <code>.venv</code> ничего не ломает</li>
+    </ul>
+  </div>
+
+  <div class="done-row"><input type="checkbox" id="done-12"><label for="done-12">Глава пройдена</label></div>
+  <div class="nav" style="margin-top:24px"><a href="11-baza-dannyh.html">← назад</a><a href="13-docker-compose.html">дальше →</a></div>
+</div>
+
+<script>
+  var slug = 'gramotnost-kniga';
+  document.querySelectorAll('.done-row input[type="checkbox"]').forEach(function (cb) {
+    var saved = localStorage.getItem(slug + '-' + cb.id);
+    if (saved === 'true') cb.checked = true;
+    cb.addEventListener('change', function () { localStorage.setItem(slug + '-' + cb.id, cb.checked); });
+  });
+
+  var СЦЕНАРИИ = {
+    ps: {
+      'docker ps':
+        'CONTAINER ID   IMAGE         COMMAND                  CREATED       STATUS       PORTS                    NAMES\n' +
+        '9b7f21c4ad03   postgres:16   "docker-entrypoint.s…"   2 hours ago   Up 2 hours   0.0.0.0:5432->5432/tcp   demobank-db',
+      'docker images':
+        'REPOSITORY   TAG         IMAGE ID       CREATED        SIZE\n' +
+        'postgres     16          4f9c2b1e77a8   3 weeks ago    432MB\n' +
+        'python       3.12-slim   c1d5e0a93b62   5 weeks ago    130MB'
+    },
+    build: {
+      'docker build -t demobank-app .':
+        '[+] Building 3.4s (10/10) FINISHED\n' +
+        ' => [internal] load build definition from Dockerfile                     0.0s\n' +
+        ' => [internal] load metadata for docker.io/library/python:3.12-slim      0.6s\n' +
+        ' => [internal] load .dockerignore                                        0.0s\n' +
+        ' => [1/5] FROM docker.io/library/python:3.12-slim                        0.0s\n' +
+        ' => [internal] load build context                                        0.1s\n' +
+        ' => CACHED [2/5] WORKDIR /app                                            0.0s\n' +
+        ' => CACHED [3/5] COPY requirements.txt .                                 0.0s\n' +
+        ' => CACHED [4/5] RUN pip install -r requirements.txt                     0.0s\n' +
+        ' => [5/5] COPY . .                                                       0.2s\n' +
+        ' => exporting to image                                                   1.9s\n' +
+        ' => => naming to docker.io/library/demobank-app:latest                   0.0s'
+    },
+    run: {
+      'docker run -p 8000:8000 demobank-app':
+        'INFO:     Started server process [1]\n' +
+        'INFO:     Waiting for application startup.\n' +
+        'INFO:     Application startup complete.\n' +
+        'INFO:     Uvicorn running on http://0.0.0.0:8000 (Press CTRL+C to quit)',
+      'docker run -p 8080:8000 demobank-app':
+        'INFO:     Started server process [1]\n' +
+        'INFO:     Waiting for application startup.\n' +
+        'INFO:     Application startup complete.\n' +
+        'INFO:     Uvicorn running on http://0.0.0.0:8000 (Press CTRL+C to quit)'
+    },
+    logs: {
+      'docker ps -a':
+        'CONTAINER ID   IMAGE           COMMAND                  CREATED          STATUS                     PORTS     NAMES\n' +
+        '4f1c9a2b7d3e   demobank-app    "python app.py"          10 seconds ago   Exited (1) 9 seconds ago             brave_hopper',
+      'docker logs 4f1c9a2b7d3e':
+        'Traceback (most recent call last):\n' +
+        '  File "/app/app.py", line 7, in <module>\n' +
+        '    with open("config.yml") as f:\n' +
+        '         ^^^^^^^^^^^^^^^^^^\n' +
+        "FileNotFoundError: [Errno 2] No such file or directory: 'config.yml'",
+      'docker logs brave_hopper':
+        'Traceback (most recent call last):\n' +
+        '  File "/app/app.py", line 7, in <module>\n' +
+        '    with open("config.yml") as f:\n' +
+        '         ^^^^^^^^^^^^^^^^^^\n' +
+        "FileNotFoundError: [Errno 2] No such file or directory: 'config.yml'"
+    },
+    stoprm: {
+      'docker stop demobank-db': 'demobank-db',
+      'docker rm demobank-db': 'demobank-db',
+      'docker images':
+        'REPOSITORY   TAG         IMAGE ID       CREATED        SIZE\n' +
+        'postgres     16          4f9c2b1e77a8   3 weeks ago    432MB\n' +
+        'python       3.12-slim   c1d5e0a93b62   5 weeks ago    130MB'
+    }
+  };
+  document.querySelectorAll('.fake-terminal').forEach(function (term) {
+    var сценарий = СЦЕНАРИИ[term.dataset.terminal] || {};
+    var input = term.querySelector('input');
+    var output = term.querySelector('.output');
+    var ужеОстановлен = false;
+    input.addEventListener('keydown', function (e) {
+      if (e.key !== 'Enter') return;
+      var команда = input.value.trim();
+      output.textContent += '$ ' + команда + '\n';
+      var ключ = команда.toLowerCase();
+      var ответ;
+      if (term.dataset.terminal === 'stoprm' && ключ === 'docker rm demobank-db' && !ужеОстановлен) {
+        ответ = 'Error response from daemon: cannot remove container "demobank-db": ' +
+          'container is running: stop the container before removing or force remove';
+      } else {
+        if (term.dataset.terminal === 'stoprm' && ключ === 'docker stop demobank-db') ужеОстановлен = true;
+        ответ = сценарий[ключ];
+      }
+      output.textContent += (ответ || 'команда не из этого шага - попробуй именно ту, что в задании') + '\n\n';
+      input.value = '';
+    });
+  });
+</script>
+</body>
+</html>

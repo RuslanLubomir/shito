@@ -1,0 +1,449 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Глава 14. SSH, ключи и пользователи на сервере</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🔑</text></svg>">
+<style>
+  :root {
+    --paper: #FFFFFF; --raised: #FFFFFF; --ink: #2B2B2B; --muted: #737373; --muted-2: #A3A3A3;
+    --line: #E4E4E4; --line-soft: #F0F0F0; --accent: #5C5C5C; --accent-bg: #ECECEC; --accent-line: #C6C6C6;
+    --pos: #1A7F4E; --pos-bg: #E4F3EA; --warn: #B5762A; --warn-bg: #FBF0E2;
+    --shadow-sm: 0 1px 2px rgba(24,32,22,0.04);
+    --shadow: 0 1px 2px rgba(24,32,22,0.04), 0 8px 22px -10px rgba(24,32,22,0.12);
+    --radius: 14px; --radius-sm: 9px;
+    --font-display: ui-serif, "Iowan Old Style", "Palatino Linotype", Georgia, serif;
+    --font-body: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+    --font-mono: ui-monospace, "SF Mono", "Cascadia Code", Consolas, monospace;
+    --space-2: 8px; --space-3: 12px; --space-4: 16px; --space-5: 24px;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--paper); color: var(--ink); font-family: var(--font-body);
+    font-size: 0.95rem; line-height: 1.55; }
+  .wrap { max-width: 680px; margin: 0 auto; padding: var(--space-5) var(--space-4) 80px; }
+  .nav { display: flex; justify-content: space-between; font-size: 0.85rem; margin-bottom: var(--space-4); }
+  .nav a { color: var(--accent); }
+  h1 { font-family: var(--font-display); font-size: 1.6rem; margin: 0 0 var(--space-2); }
+  h2 { font-size: 1.05rem; margin: var(--space-4) 0 var(--space-2); }
+  .theory { background: var(--accent-bg); border-radius: var(--radius-sm); padding: var(--space-3) var(--space-4);
+    font-size: 0.9rem; margin: var(--space-3) 0; }
+  .step { background: var(--raised); border: 1px solid var(--line); border-radius: var(--radius);
+    padding: var(--space-4); margin: var(--space-4) 0; box-shadow: var(--shadow-sm); }
+  .example { border-left: 3px solid var(--accent); padding: var(--space-2) var(--space-4); margin: var(--space-3) 0;
+    font-size: 0.9rem; color: var(--muted); }
+  .scope-note { background: #FFF4D6; border-radius: var(--radius-sm); padding: var(--space-3) var(--space-4);
+    font-size: 0.85rem; color: #7a5c10; margin: var(--space-4) 0; }
+  pre.code-block { background: var(--ink); color: #EDEDED; padding: var(--space-4); border-radius: var(--radius-sm);
+    font-family: var(--font-mono); font-size: 0.85rem; white-space: pre-wrap; margin: var(--space-3) 0; }
+  .fake-terminal { background: #1b1b1b; border-radius: var(--radius-sm); padding: var(--space-4);
+    font-family: var(--font-mono); font-size: 0.85rem; color: #d8d8d8; margin: var(--space-3) 0; }
+  .fake-terminal .output { white-space: pre-wrap; margin: var(--space-2) 0; min-height: 1.2em; }
+  .fake-terminal .prompt-row { display: flex; align-items: center; gap: var(--space-2); }
+  .fake-terminal .prompt-row span.sym { color: #6fcf6f; }
+  .fake-terminal input { background: transparent; border: none; color: #fff; font-family: var(--font-mono);
+    font-size: 0.85rem; flex: 1; outline: none; }
+  .quest { border-left: 3px solid var(--accent); padding: var(--space-2) var(--space-4); margin: var(--space-4) 0; }
+  details.hint, details.solution { border: 1px solid var(--line); border-radius: var(--radius-sm);
+    padding: var(--space-2) var(--space-3); margin-bottom: var(--space-2); font-size: 0.88rem; }
+  details.solution summary { color: var(--pos); font-weight: 600; }
+  .checklist { background: var(--pos-bg); border-radius: var(--radius-sm); padding: var(--space-4);
+    margin: var(--space-4) 0; font-size: 0.9rem; }
+  .checklist ul { margin: var(--space-2) 0 0; padding-left: var(--space-4); }
+  .done-row { display: flex; align-items: center; gap: var(--space-2); margin-top: var(--space-4);
+    padding-top: var(--space-3); border-top: 1px dashed var(--line); }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="nav"><a href="00-оглавление.html">← оглавление</a><span>Глава 14 из 33</span></div>
+  <h1>SSH, ключи и пользователи на сервере</h1>
+  <p style="color:var(--muted)">Как зайти на арендованную машину и работать там, не отдавая пароль
+    на подбор и не сидя всё время под учёткой, которой можно сломать вообще всё.</p>
+
+  <div class="scope-note">
+    Честно: настоящего сервера в этой главе ещё нет. Демо Банк пока живёт у тебя на компьютере
+    (глава 13, Docker Compose). Машина в Yandex Cloud появится в следующей главе, через Terraform,
+    и вот тогда эти же команды пойдут на живой адрес. Тренажёры ниже - имитация диалога с программой
+    OpenSSH: постоянные фразы взяты из того, что она действительно печатает, но ключ на странице не
+    создаётся, сеть никуда не ходит, а уникальные куски (само тело ключа, отпечаток сервера,
+    картинка-randomart) заменены пометкой в угловых скобках. Их нельзя копировать и куда-то вставлять:
+    у каждого настоящего запуска они свои. Живая проверка будет в главах 15-16.
+  </div>
+
+  <div class="theory">
+    <b>Где ты, и где сервер.</b> Читатель этой книги сидит в Windows 11. Клиент SSH там обычно уже
+    есть: в PowerShell команда <code>ssh</code> должна открываться. Если PowerShell пишет, что
+    команду не нашёл, клиент доставляется так: Параметры → Приложения → Дополнительные компоненты →
+    OpenSSH Client. Команды и пути в книге по-прежнему часто записаны в стиле Linux
+    (<code>~/.ssh/...</code>): знак <code>~</code> значит «домашняя папка того, кто сейчас вошёл».
+    На твоём компьютере это <code>C:\Users\Имя</code>, на сервере Linux - что-то вроде
+    <code>/home/demo</code>. Это разные диски. Ключ создаётся у тебя. Файл со списком разрешённых
+    ключей лежит на сервере. Путать эти два места - главная ошибка этой главы.
+  </div>
+  <div class="theory">
+    <b>Как работает тренажёр.</b> Это не настоящий терминал. Он понимает ровно команды этого шага и
+    отвечает заготовленным текстом. Регистр букв тренажёр не различает - живые программы различают,
+    про это будет отдельная оговорка у <code>ssh-keygen</code>. Пароль сюда вводить не нужно: поле
+    не умеет скрывать символы, а настоящий запрос пароля их не показывает.
+  </div>
+
+  <div class="step">
+    <h2>Сначала целиком, потом по частям</h2>
+    <p class="theory">
+      <b>Теория.</b> SSH (Secure Shell, «защищённая оболочка») - это способ из своего терминала зайти
+      на другой компьютер и выполнять команды так, как будто сидишь за ним. Другой компьютер в нашем
+      случае - сервер: машина без твоего монитора, которую арендуют и которая работает сама. Разговор
+      идёт по сети и зашифрован: по дороге видно шум, а не текст команд. На сервере этот вход принимает
+      служба (слово из главы 1) - фоновая программа, обычно её называют <code>sshd</code>. Она
+      слушает порт 22. Порт здесь - просто номер двери: «этот разговор отдай программе SSH, а не
+      сайту и не почте».
+    </p>
+    <div class="example">
+      <b>Пример.</b> Весь будущий заход на сервер Демо Банка - пять движений, не десять несвязанных
+      команд. 1) На своём Windows создаёшь пару ключей. 2) Публичную половину отдаёшь серверу (в
+      следующей главе её попросят в форме создания машины; это то же самое, что дописать строку в
+      файл на сервере). 3) Пишешь <code>ssh пользователь@адрес</code>, в первый раз отвечаешь
+      <code>yes</code> на вопрос про отпечаток. 4) Работаешь обычным пользователем, а не root;
+      повышенные права берёшь точечно, через <code>sudo</code>. 5) Чтобы не помнить длинную строку,
+      записываешь короткое имя в <code>~/.ssh/config</code> у себя на компьютере и дальше пишешь
+      <code>ssh demobank</code>.
+    </div>
+    <div class="checklist" style="margin-top:0">
+      <b>Проверь себя.</b> Команда <code>ssh-keygen</code> создаёт ключ. Её запускают на сервере или
+      на своём компьютере?
+      <details class="solution" style="margin-top:8px"><summary>Ответ</summary>На своём компьютере.
+      Приватный ключ должен родиться у тебя и у тебя остаться. На сервер уезжает только публичная
+      половина, и чаще всего её туда кладёт не эта команда.</details>
+    </div>
+  </div>
+
+  <div class="step">
+    <h2>Пароль подбирают, ключ по сети не уезжает</h2>
+    <p class="theory">
+      <b>Теория.</b> Войти по SSH можно и паролем, и ключом. Шифрование дороги есть в обоих случаях:
+      пароль не летает открытым текстом. Слабое место пароля другое. Порт 22 на арендованных серверах
+      постоянно трогают автоматические программы: они перебирают распространённые пароли и стучатся
+      куда дотянутся. Это не редкая киношная атака, а фон интернета. Короткий или известный пароль
+      так находят. Пара ключей устроена иначе. Приватный ключ остаётся только у тебя и по сети не
+      передаётся. На сервере лежит публичный ключ. Сервер присылает разовую задачу, твой компьютер
+      подтверждает её приватным ключом, сервер сверяет ответ с публичной половиной. Подобрать такую
+      пару перебором, как пароль из словаря, на практике не выходит.
+    </p>
+    <div class="example">
+      <b>Пример.</b> Приватный ключ - как единственный оригинал ключа от квартиры: его не фотографируют
+      и не пересылают. Публичный - как слепок, который можно отдать мастерской, чтобы она сделала под
+      него замок. Замок (сервер) проверяет, что пришёл хозяин оригинала, но сам оригинал в мастерской
+      не хранится. Если приватный файл всё же уехал в чат или на чужую флешку - эту пару считают
+      сожжённой и делают новую. «Потом поменяю» здесь хуже, чем сразу новая пара: кто скопировал файл,
+      уже не забудет его по твоей просьбе.
+    </div>
+    <div class="checklist" style="margin-top:0">
+      <b>Проверь себя.</b> SSH по паролю не шифрует дорогу, поэтому пароль плох. Так?
+      <details class="solution" style="margin-top:8px"><summary>Ответ</summary>Нет. Дорога шифруется
+      и с паролем. Пароль плох тем, что его подбирают перебором по известным вариантам, а приватный
+      ключ по сети вообще не отправляется, и перебор как у пароля к нему не применяется.</details>
+    </div>
+  </div>
+
+  <div class="step">
+    <h2>Два файла: приватный и .pub</h2>
+    <p class="theory">
+      <b>Теория.</b> Пара создаётся одной командой: <code>ssh-keygen -t ed25519 -C "своя подпись"</code>.
+      <code>-t</code> - тип ключа. ed25519 - современный тип, его и берут, если нет старой причины
+      взять другой. <code>-C</code> - комментарий, подпись для тебя: она попадёт в конец публичного
+      ключа, чтобы через год было видно, чей это ключ. Это не пароль и не секрет. Буква C в живой
+      команде заглавная. Маленькое <code>-c</code> у <code>ssh-keygen</code> значит другое: сменить
+      комментарий у уже существующего ключа. На выходе два файла в папке <code>.ssh</code> домашней
+      папки. Без расширения - приватный, его не показывают и не пересылают. С расширением
+      <code>.pub</code> - публичный, его как раз можно вставлять в форму облака и на сервер.
+    </p>
+    <div class="example">
+      <b>Пример.</b> На Windows 11 живой <code>ssh-keygen</code> спрашивает три вещи подряд: куда
+      сохранить (Enter - согласиться с <code>C:\Users\Имя\.ssh\id_ed25519</code>), парольную фразу,
+      повтор фразы. Парольная фраза - это замок на сам файл ключа на твоём диске. Её спрашивает твой
+      компьютер, на сервер она не отправляется. Пустая фраза (два раза Enter) для первого учебного
+      ключа допустима: файлом ключа уже можно входить. Фраза лучше, если компьютером могут
+      воспользоваться другие, но забытую фразу не восстановить - останется только новая пара.
+      Если программа спросит, перезаписать ли уже существующий <code>id_ed25519</code>, не соглашайся
+      вслепую: согласие уничтожает старый приватный ключ, и входы, которые на него завязаны, отвалятся.
+      Тренажёр показывает весь этот диалог сразу, с пометками вместо уникальных кусков. В PowerShell
+      вопросы придут по одному, и ты ответишь Enter.
+    </div>
+    <div class="fake-terminal" data-terminal="keygen">
+      <div class="output"></div>
+      <div class="prompt-row"><span class="sym">$</span><input type="text" placeholder="введи команду..."></div>
+    </div>
+    <div class="quest">
+      <b>Задание.</b> Введи и нажми Enter: <code>ssh-keygen -t ed25519 -C "своя подпись"</code>
+    </div>
+    <div class="hint-row">
+      <details class="hint"><summary>Подсказка</summary>Кавычки прямые, не «ёлочки»: внутри пробел, без кавычек это были бы два отдельных слова. <code>-t ed25519</code> - тип, <code>-C</code> - подпись, не пароль. В живой команде C заглавная.</details>
+      <details class="solution"><summary>Показать разбор</summary>Программа написала, что сохранила два файла: <code>id_ed25519</code> (приватный) и <code>id_ed25519.pub</code> (публичный). Строка <code>SHA256:...</code> - отпечаток уже твоего ключа, у каждого запуска свой; в тренажёре вместо него пометка. Рамка <code>+--[ED25519 256]--+</code> называется randomart: тот же отпечаток картинкой из символов, читать её не нужно, это не пароль и не ошибка. Тренажёр не различает регистр, поэтому принял бы и маленькое <code>-c</code>. Живой <code>ssh-keygen</code> так не сделает: копируй флаг с заглавной C.</details>
+    </div>
+  </div>
+
+  <div class="step">
+    <h2>Публичный ключ - одна строка в списке</h2>
+    <p class="theory">
+      <b>Теория.</b> Сервер пускает тебя не потому, что «ключ где-то в облаке», а потому что в домашней
+      папке нужного пользователя лежит обычный текстовый файл <code>~/.ssh/authorized_keys</code>:
+      список разрешённых публичных ключей, один ключ на строку. Команда <code>ssh-copy-id</code> на
+      Mac и Linux дописывает туда твою строку сама, но ей уже нужен какой-то вход (часто пароль). В
+      PowerShell на Windows 11 этой команды обычно нет, и для нашего курса она не обязательна. В
+      следующей главе публичный ключ попросят при создании сервера: облако само запишет эту строку в
+      <code>authorized_keys</code>. Конец один и тот же. Дописывают в конец файла. Одна угловая скобка
+      <code>&gt;</code> в перенаправлении затирает файл целиком и сносит чужие ключи; для дописывания
+      нужны две, <code>&gt;&gt;</code>. И класть строку нужно в домашнюю папку того пользователя,
+      под которым будешь входить, а не «куда-нибудь в .ssh».
+    </p>
+    <div class="example">
+      <b>Пример.</b> Так выглядит публичный ключ, если его напечатать. Начало
+      <code>ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAI</code> у ключей этого типа одинаковое - по нему
+      узнают строку. Дальше уникальное тело, в конце комментарий из <code>-C</code>. На Windows свою
+      настоящую строку смотрят так:
+      <code>Get-Content $env:USERPROFILE\.ssh\id_ed25519.pub</code>.
+      В книге та же операция записана как <code>cat ~/.ssh/id_ed25519.pub</code> - в PowerShell
+      <code>cat</code> тоже умеет печатать файл, это местное имя для того же чтения. Печатай файл
+      с <code>.pub</code>. Файл без расширения этой командой лучше не открывать на чужом экране: это
+      как раз оригинал ключа.
+    </div>
+    <div class="fake-terminal" data-terminal="catpub">
+      <div class="output"></div>
+      <div class="prompt-row"><span class="sym">$</span><input type="text" placeholder="введи команду..."></div>
+    </div>
+    <div class="quest">
+      <b>Задание.</b> Введи: <code>cat ~/.ssh/id_ed25519.pub</code>
+    </div>
+    <div class="hint-row">
+      <details class="hint"><summary>Подсказка</summary>Нужен файл с окончанием <code>.pub</code>. Без него ты попросил бы приватный ключ.</details>
+      <details class="solution"><summary>Показать разбор</summary>Одна строка: тип, тело, комментарий «своя подпись». В форму облака и в <code>authorized_keys</code> идёт целиком эта строка из настоящего файла <code>.pub</code>, не пометка из тренажёра. Если после добавления сервер всё равно просит пароль, частая причина не в «битом ключе», а в том, что папка <code>.ssh</code> на сервере открыта не только владельцу. У владельца она должна быть закрыта для остальных. Это ловушка прав, не повод слать кому-то приватный файл.</details>
+    </div>
+    <div class="checklist" style="margin-top:12px">
+      <b>Проверь себя.</b> В форму создания сервера вставляют <code>id_ed25519</code> или
+      <code>id_ed25519.pub</code>? И чем форма облака отличается от ручной записи в
+      <code>authorized_keys</code>?
+      <details class="solution" style="margin-top:8px"><summary>Ответ</summary>Вставляют
+      <code>.pub</code>. Форма не создаёт другой тип ключа: она тот же публичный текст записывает в
+      список разрешённых ключей на новой машине. Приватный файл в форму не кладут.</details>
+    </div>
+  </div>
+
+  <div class="step">
+    <h2>Первый вход и вопрос про отпечаток</h2>
+    <p class="theory">
+      <b>Теория.</b> Подключение выглядит так: <code>ssh пользователь@адрес</code>. Адрес в примерах
+      этой главы - <code>203.0.113.10</code>. Это учебный адрес из диапазона, специально зарезервированного
+      под документацию, не адрес Демо Банка и не чей-то живой сервер. В первый раз SSH ещё не знает
+      эту машину и спрашивает, доверяешь ли ты её отпечатку (fingerprint). Отпечаток - короткая
+      сводка ключа сервера, не твоего ключа. Смысл вопроса: убедиться, что на том конце тот компьютер,
+      к которому ты шёл, а не подставной, который встал посередине. Если панель облака показывает
+      отпечаток - сравни. Слово ответа - <code>yes</code> целиком и строчными буквами. Одной буквы
+      <code>y</code> живой OpenSSH не принимает. После <code>yes</code> отпечаток записывается в файл
+      <code>known_hosts</code> на твоём компьютере, и в следующий раз вопрос не задают, пока ключ
+      сервера тот же.
+    </p>
+    <div class="example">
+      <b>Пример.</b> Длинная форма, пока нет короткого имени в config:
+      <code>ssh -i ~/.ssh/id_ed25519 demo@203.0.113.10</code>. Флаг <code>-i</code> явно указывает
+      приватный ключ (снова файл без <code>.pub</code>). На Windows тот же смысл у
+      <code>ssh -i $env:USERPROFILE\.ssh\id_ed25519 demo@203.0.113.10</code>. Если ключ не подошёл,
+      программа может спросить пароль пользователя - это запасной вход, не «ключ передался». Ответ
+      <code>no</code> на отпечаток честно обрывает вход: ничего не сохраняется, соединение не
+      открывается. Позже, когда сервер пересоздадут, ключ машины сменится, и SSH напишет жёсткое
+      предупреждение, что опознание узла изменилось. Это не повод привычно отвечать «да всё равно».
+      Как разбирать именно это предупреждение, будет рядом с тем моментом, когда машина реально
+      появится и её начнут пересоздавать. Сейчас достаточно знать, зачем вопрос задают в первый раз.
+    </div>
+    <div class="fake-terminal" data-terminal="sshconnect">
+      <div class="output"></div>
+      <div class="prompt-row"><span class="sym">$</span><input type="text" placeholder="введи команду..."></div>
+    </div>
+    <div class="quest">
+      <b>Задание.</b> Сначала введи <code>ssh demo@203.0.113.10</code>. Когда появится вопрос,
+      второй строкой введи <code>yes</code>.
+    </div>
+    <div class="hint-row">
+      <details class="hint"><summary>Подсказка</summary>Сначала команда входа, потом отдельным вводом слово <code>yes</code> строчными, не <code>y</code>. Адрес учебный, тренажёр никуда не подключается.</details>
+      <details class="solution"><summary>Показать разбор</summary>Первый ответ - вопрос про подлинность узла и отпечаток ED25519. Это сводка ключа сервера; в тренажёре вместо неё пометка, потому что сервера нет и считать нечего. <code>yes</code> даёт строку <code>Warning: Permanently added ...</code> - отпечаток записан в <code>known_hosts</code>, и приглашение <code>demo@203.0.113.10:~$</code> значит: ты на машине как пользователь demo, текущая папка - его домашняя. Живой OpenSSH хочет именно строчное <code>yes</code>. Тренажёр книги регистр не различает, сервер различает. Буква <code>y</code> на сервере не считается согласием. После согласия настоящая система может ещё напечатать приветствие - у каждой установки своё, к входу оно не относится.</details>
+    </div>
+    <div class="checklist" style="margin-top:12px">
+      <b>Проверь себя.</b> Fingerprint в этом вопросе - отпечаток твоего нового ключа ed25519?
+      <details class="solution" style="margin-top:8px"><summary>Ответ</summary>Нет. Это отпечаток
+      ключа сервера, к которому ты подключаешься. Твой ключ проверяется отдельно, уже после того как
+      ты согласился, что машина та.</details>
+    </div>
+  </div>
+
+  <div class="step">
+    <h2>Обычный пользователь и sudo, а не жизнь под root</h2>
+    <p class="theory">
+      <b>Теория.</b> <code>root</code> - учётная запись с полными правами на всю систему, без вопроса
+      «точно?». Постоянно работать под ней плохо: одна опечатка в команде может снести то, до чего
+      обычный пользователь просто не дотянулся бы. Поэтому на сервер заходят обычным пользователем, а
+      право временно повысить права дают через группу <code>sudo</code> (на Ubuntu и Debian она
+      называется так; на части других Linux ту же роль играет группа <code>wheel</code>).
+      <code>sudo</code> перед командой значит: выполни эту одну команду с повышенными правами, обычно
+      как root, и всё. Следующая команда без <code>sudo</code> снова обычная. Пароль, который при
+      этом спрашивают, - пароль твоего пользователя, не отдельный пароль root, и на экране он не
+      отображается. Пользователь Linux - это вход на машину. Это не клиент Демо Банка: клиенты банка
+      живут внутри программы, а не в списке учёток сервера.
+    </p>
+    <div class="example">
+      <b>Пример.</b> Облачные образы Ubuntu часто уже выдают одного пользователя с правом sudo (имя
+      задаёшь при создании или берёшь готовое вроде <code>ubuntu</code>) и не пускают по SSH сразу
+      как root. Отдельного человека заводят, если он правда нужен, уже зайдя на сервер:
+      <code>sudo adduser operator</code> спрашивает пароль и имя в диалоге, затем
+      <code>sudo usermod -aG sudo operator</code> дописывает его в группу sudo. Буква <code>-a</code>
+      значит «добавить к текущим группам». Без неё <code>-G</code> может заменить список групп, а не
+      дополнить - так легко снять с человека другие права. Команда <code>id</code> без sudo показывает,
+      кто ты. Числа бывают разными, важны имена в скобках, например
+      <code>uid=1000(demo) groups=1000(demo),27(sudo)</code> - demo есть в группе sudo. Если человека
+      в группе нет, sudo ответит <code>demo is not in the sudoers file. This incident will be reported.</code>
+      Это не вызов охраны: попытка записана в журнал на сервере.
+    </div>
+    <div class="fake-terminal" data-terminal="sudo">
+      <div class="output"></div>
+      <div class="prompt-row"><span class="sym">$</span><input type="text" placeholder="введи команду..."></div>
+    </div>
+    <div class="quest">
+      <b>Задание.</b> Введи: <code>sudo whoami</code>. Пароль в тренажёр не набирай.
+    </div>
+    <div class="hint-row">
+      <details class="hint"><summary>Подсказка</summary><code>whoami</code> значит «под каким именем выполняется команда». С <code>sudo</code> она должна ответить не твоим обычным именем.</details>
+      <details class="solution"><summary>Показать разбор</summary>Строка <code>[sudo] password for demo:</code> - запрос пароля пользователя demo. В настоящем терминале ты вводишь его здесь же, символы не печатаются, и только потом приходит результат. Тренажёр сжимает это в один показ: поля для скрытого пароля у него нет. <code>root</code> - ответ <code>whoami</code>: эта одна команда выполнилась как root. Сессия при этом не переключилась на root навсегда.</details>
+    </div>
+    <div class="checklist" style="margin-top:12px">
+      <b>Проверь себя.</b> <code>sudo whoami</code> напечатал <code>root</code>. Следующая команда
+      без sudo тоже пойдёт как root?
+      <details class="solution" style="margin-top:8px"><summary>Ответ</summary>Нет. sudo поднимает
+      права на одну команду. Следующая без sudo снова выполняется от обычного пользователя. И пароль
+      спрашивали твой, не «пароль root по сети».</details>
+    </div>
+  </div>
+
+  <div class="step">
+    <h2>Короткое имя в ~/.ssh/config</h2>
+    <p class="theory">
+      <b>Теория.</b> Файл <code>~/.ssh/config</code> лежит на твоём компьютере, рядом с ключом, а не
+      на сервере. Это текст, не программа. Блок начинается с <code>Host</code> - короткое имя, которое
+      ты сам придумаешь и потом напишешь после <code>ssh</code>. <code>HostName</code> - настоящий
+      адрес. <code>User</code> - кем входить. <code>IdentityFile</code> - путь к приватному ключу, без
+      <code>.pub</code>. OpenSSH и на Windows понимает <code>~</code> в этом файле как твою домашнюю
+      папку. После такого блока команда <code>ssh demobank-server</code> сама подставляет адрес,
+      пользователя и ключ. Имя после <code>Host</code> любое; оно не обязано совпадать с названием
+      банка или с именем машины.
+    </p>
+    <div class="example">
+      <b>Пример.</b> Рабочий образец, не ответ на задание ниже. Короткое имя здесь
+      <code>demobank-server</code>, адрес по-прежнему учебный <code>203.0.113.10</code>, пользователь
+      <code>demo</code>, ключ <code>~/.ssh/id_ed25519</code>. Три нижние строки с отступом, первая без.
+      Если файл уже такой, <code>cat ~/.ssh/config</code> печатает ровно эти строки и ничего от себя
+      не добавляет. На Windows тот же файл - <code>C:\Users\Имя\.ssh\config</code>. Его создают в
+      Блокноте как простой текст. При сохранении тип «Все файлы» и имя <code>config</code> без
+      <code>.txt</code>: иначе получится <code>config.txt</code>, и SSH его не прочитает. Папка
+      <code>.ssh</code> бывает скрытой: в проводнике включается показ скрытых элементов.
+    </div>
+    <pre class="code-block">Host demobank-server
+    HostName 203.0.113.10
+    User demo
+    IdentityFile ~/.ssh/id_ed25519</pre>
+    <div class="fake-terminal" data-terminal="sshconfig">
+      <div class="output"></div>
+      <div class="prompt-row"><span class="sym">$</span><input type="text" placeholder="введи команду..."></div>
+    </div>
+    <div class="quest">
+      <b>Задание на файл, не на тренажёр.</b> Сначала можешь ввести <code>cat ~/.ssh/config</code> -
+      увидишь образец выше. Потом собери свой текст под другие условия: короткое имя
+      <code>demobank</code> (не demobank-server), адрес <code>203.0.113.10</code>, пользователь
+      <code>demo</code>, приватный ключ <code>~/.ssh/id_ed25519</code>. Цель - чтобы
+      <code>ssh demobank</code> значила этот вход.
+    </div>
+    <div class="hint-row">
+      <details class="hint"><summary>Подсказка</summary>Четыре строки. <code>Host</code> - короткое имя <code>demobank</code>. <code>HostName</code> - адрес цифрами, их нельзя менять местами. <code>IdentityFile</code> без <code>.pub</code>.</details>
+      <details class="hint"><summary>Подсказка ещё</summary>Образец в тренажёре назван <code>demobank-server</code> специально. В задании имя другое, остальные три поля те же. Отступ у трёх нижних строк - пробелы, так OpenSSH читает блок.</details>
+      <details class="solution"><summary>Показать разбор</summary>
+        <pre class="code-block">Host demobank
+    HostName 203.0.113.10
+    User demo
+    IdentityFile ~/.ssh/id_ed25519</pre>
+        Этот текст сохраняют у себя, в <code>C:\Users\Имя\.ssh\config</code>, не на сервере и не в
+        Word. Имя файла - <code>config</code>, без <code>.txt</code>. <code>IdentityFile</code>
+        указывает на приватный ключ: публичный уже должен лежать на сервере. Адрес учебный, пока нет
+        машины из следующей главы его не на что заменить. Когда появится настоящий адрес, меняется
+        строка <code>HostName</code>, а короткое имя <code>demobank</code> можно оставить.
+      </details>
+    </div>
+    <div class="checklist" style="margin-top:12px">
+      <b>Проверь себя.</b> Ты написал <code>ssh demobank</code>. Какой файл на каком компьютере SSH
+      откроет, чтобы узнать адрес?
+      <details class="solution" style="margin-top:8px"><summary>Ответ</summary>Файл config в папке
+      <code>.ssh</code> на твоём компьютере (<code>C:\Users\Имя\.ssh\config</code>, в записях книги -
+      <code>~/.ssh/config</code>). На сервере этот файл для короткого имени не читается. На сервере
+      для входа по ключу читается <code>authorized_keys</code> того пользователя, под которым входишь.</details>
+    </div>
+  </div>
+
+  <div class="checklist">
+    <b>Ты понял тему, если можешь:</b>
+    <ul>
+      <li>объяснить своими словами, что SSH делает и почему это не «пароль без шифрования», а отдельный способ доказать вход</li>
+      <li>сказать, какой из двух файлов ключа нельзя никому отправлять, и куда девается публичный - в том числе через форму облака</li>
+      <li>разобрать команду <code>ssh-keygen -t ed25519 -C "..."</code> и не перепутать заглавное <code>-C</code> с маленьким <code>-c</code></li>
+      <li>объяснить, зачем при первом подключении спрашивают fingerprint и почему согласие - слово <code>yes</code>, а не одна буква</li>
+      <li>сказать, почему не работают постоянно под root, чей пароль спрашивает <code>sudo</code> и зачем в <code>usermod</code> буква <code>-a</code></li>
+      <li>собрать <code>~/.ssh/config</code> с <code>Host</code>, <code>HostName</code>, <code>User</code>, <code>IdentityFile</code> и не положить этот файл на сервер по ошибке</li>
+      <li>честно сказать, что в этой главе сервера ещё нет: тренажёр показывает вид диалога, живой адрес будет в следующей главе</li>
+    </ul>
+  </div>
+
+  <div class="done-row"><input type="checkbox" id="done-14"><label for="done-14">Глава пройдена</label></div>
+  <div class="nav" style="margin-top:24px"><a href="13-docker-compose.html">← назад</a><a href="00-оглавление.html">оглавление (дальше — скоро) →</a></div>
+</div>
+
+<script>
+  var slug = 'gramotnost-kniga';
+  document.querySelectorAll('.done-row input[type="checkbox"]').forEach(function (cb) {
+    var saved = localStorage.getItem(slug + '-' + cb.id);
+    if (saved === 'true') cb.checked = true;
+    cb.addEventListener('change', function () { localStorage.setItem(slug + '-' + cb.id, cb.checked); });
+  });
+
+  var СЦЕНАРИИ = {
+    keygen: {
+      'ssh-keygen -t ed25519 -c "своя подпись"': 'Generating public/private ed25519 key pair.\nEnter file in which to save the key (C:\\Users\\Имя/.ssh/id_ed25519):\nEnter passphrase (empty for no passphrase):\nEnter same passphrase again:\nYour identification has been saved in C:\\Users\\Имя/.ssh/id_ed25519\nYour public key has been saved in C:\\Users\\Имя/.ssh/id_ed25519.pub\nThe key fingerprint is:\nSHA256:<уникальная строка этого ключа> своя подпись\nThe key\'s randomart image is:\n+--[ED25519 256]--+\n| <рисунок из символов, у каждого ключа свой> |\n+----[SHA256]-----+'
+    },
+    catpub: {
+      'cat ~/.ssh/id_ed25519.pub': 'ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAI<уникальное тело ключа> своя подпись',
+      'get-content $env:userprofile\\.ssh\\id_ed25519.pub': 'ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAI<уникальное тело ключа> своя подпись'
+    },
+    sshconnect: {
+      'ssh demo@203.0.113.10': 'The authenticity of host \'203.0.113.10 (203.0.113.10)\' can\'t be established.\nED25519 key fingerprint is SHA256:<отпечаток этого сервера, в тренажёре его нет>\nThis key is not known by any other names.\nAre you sure you want to continue connecting (yes/no/[fingerprint])?',
+      'yes': 'Warning: Permanently added \'203.0.113.10\' (ED25519) to the list of known hosts.\ndemo@203.0.113.10:~$',
+      'y': 'в живом OpenSSH одной буквы y мало - нужно слово yes целиком и строчными буквами',
+      'no': 'Host key verification failed.'
+    },
+    sudo: {
+      'sudo whoami': '[sudo] password for demo:\nroot'
+    },
+    sshconfig: {
+      'cat ~/.ssh/config': 'Host demobank-server\n    HostName 203.0.113.10\n    User demo\n    IdentityFile ~/.ssh/id_ed25519',
+      'get-content $env:userprofile\\.ssh\\config': 'Host demobank-server\n    HostName 203.0.113.10\n    User demo\n    IdentityFile ~/.ssh/id_ed25519'
+    }
+  };
+  document.querySelectorAll('.fake-terminal').forEach(function (term) {
+    var сценарий = СЦЕНАРИИ[term.dataset.terminal] || {};
+    var input = term.querySelector('input');
+    var output = term.querySelector('.output');
+    input.addEventListener('keydown', function (e) {
+      if (e.key !== 'Enter') return;
+      var команда = input.value.trim();
+      output.textContent += '$ ' + команда + '\n';
+      var ответ = сценарий[команда.toLowerCase()];
+      output.textContent += (ответ || 'команда не из этого шага - попробуй именно ту, что в задании') + '\n\n';
+      input.value = '';
+    });
+  });
+</script>
+</body>
+</html>
